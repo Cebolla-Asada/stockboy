@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 import mysql.connector
 import os
 from pathlib import Path
@@ -8,7 +8,9 @@ env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 app = Flask(__name__)
-
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+##connection with , sql server, db password should be
+##your own personal password in .env from MySQL 
 def get_db_connection():
     return mysql.connector.connect(
         host=os.getenv("DB_HOST"),
@@ -17,10 +19,27 @@ def get_db_connection():
         database=os.getenv("DB_NAME")
     )
 
+##basic landing page for flask server, takes u to index.html
 @app.route("/")
 def home():
-    return "Stockboy backend is running!"
+    return """
+    <h1>Stockboy backend is running!</h1>
+    <a href="/frontend/">
+        <button>Open Stockboy</button>
+    </a>
+    """
 
+##routes to frontend DIR
+@app.route("/frontend/")
+def frontend_home():
+    return send_from_directory(FRONTEND_DIR, "index.html")
+
+
+@app.route("/frontend/<path:filename>")
+def frontend_files(filename):
+    return send_from_directory(FRONTEND_DIR, filename)
+
+##api status check w/ postman
 @app.route("/api/status")
 def status():
     return {
@@ -28,6 +47,7 @@ def status():
         "message": "Stockboy API is running"
     }
 
+##db status tester, creates a DB using the schema.db in DB folder
 @app.route("/api/db-test")
 def db_test():
     connection = get_db_connection()
