@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stockboy | Trade</title><link rel="stylesheet" href="styles.css"></head>
+    <body>
+        <header class="site-header"><a class="brand" href="login.html">Stockboy</a><nav class="nav"><a href="login.html">Home</a><a class="active" href="stocks.html">Stocks</a><a href="account.html">Account</a></nav></header>
+
+        <main class="page"><p><a href="stocks.html">← Back to Stocks</a></p><div class="hero-row"><div><h1 data-stock-field="company_name">{{COMPANY_NAME}}</h1><p><strong data-stock-field="ticker">{{TICKER}}</strong></p></div><div class="stock-price" data-stock-field="current_price">{{CURRENT_PRICE}}<div class="muted" style="font-size:16px">{{DAY_CHANGE}}</div></div></div><div class="grid-3 top-gap"><div class="chart-placeholder">Stock price chart / generated price history</div>
+
+        <section class="card"><h2>Stock Details</h2><div class="form-body"><div class="summary-row"><span>Current Price</span><strong>{{CURRENT_PRICE}}</strong></div><div class="summary-row"><span>Opening Price</span><strong>{{OPEN_PRICE}}</strong></div><div class="summary-row"><span>Day High</span><strong>{{DAY_HIGH}}</strong></div><div class="summary-row"><span>Day Low</span><strong>{{DAY_LOW}}</strong></div><div class="summary-row"><span>Market Capitalization</span><strong>{{MARKET_CAP}}</strong></div><div class="summary-row"><span>Trading Volume</span><strong>{{TRADING_VOLUME}}</strong></div><div class="summary-row"><span>Available Shares</span><strong>{{AVAILABLE_SHARES}}</strong></div></div></section><section class="card"><h2>Your Holdings</h2><div class="form-body"><div class="summary-row"><span>Shares Owned</span><strong>{{SHARES_OWNED}}</strong></div><div class="summary-row"><span>Current Value</span><strong>{{HOLDING_VALUE}}</strong></div><div class="summary-row"><span>Cash Available</span><strong>{{CASH_BALANCE}}</strong></div></div></section></div>
+
+    <div class="grid-2 top-gap">
+        <form class="card" id="buy" name="buyStockForm" method="post" action="/api/orders/buy"><h2>Buy Stock</h2><div class="form-body"><input type="hidden" name="stock_id" value="{{STOCK_ID}}"><input type="hidden" name="order_type" value="market"><div class="field"><label for="buyShares">Shares</label><input id="buyShares" name="shares" type="number" min="1" step="1" required></div><div class="notice">Market order at current market price. Estimated cost: {{ESTIMATED_BUY_COST}}</div><button class="btn buy wide top-gap" id="buyStockButton" name="buyStockButton" type="submit">Buy {{TICKER}}</button></div></form>
+
+        <form class="card" id="sell" name="sellStockForm" method="post" action="/api/orders/sell"><h2>Sell Stock</h2><div class="form-body"><input type="hidden" name="stock_id" value="{{STOCK_ID}}"><input type="hidden" name="order_type" value="market"><div class="field"><label for="sellShares">Shares</label><input id="sellShares" name="shares" type="number" min="1" step="1" required></div><div class="notice">Owned: {{SHARES_OWNED}} shares. Estimated proceeds: {{ESTIMATED_SELL_PROCEEDS}}</div>
+
+        <button class="btn sell wide top-gap" id="sellStockButton" name="sellStockButton" type="submit">Sell {{TICKER}}</button></div></form></div>
+
+        <section class="card top-gap"><h2>Open Orders</h2><div class="table-wrap"><table><thead><tr><th>Order ID</th><th>Type</th><th>Shares</th><th>Status</th><th>Action</th></tr></thead><tbody id="openOrderRows"><tr><td>{{ORDER_ID}}</td><td>{{ORDER_TYPE}}</td><td>{{ORDER_SHARES}}</td><td>{{ORDER_STATUS}}</td><td><form method="post" action="/api/orders/cancel"><input type="hidden" name="order_id" value="{{ORDER_ID}}">
+
+        <button class="btn danger" id="cancelOrderButton-{{ORDER_ID}}" name="cancelOrderButton" type="submit">Cancel Order</button></form></td></tr></tbody></table></div></section>
+
+        </main>
+    </body>
+</html>

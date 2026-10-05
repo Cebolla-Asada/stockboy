@@ -1,0 +1,19 @@
+<!doctype html><html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stockboy | Account</title><link rel="stylesheet" href="styles.css"></head>
+
+    <body>
+        <header class="site-header"><a class="brand" href="login.html">Stockboy</a><nav class="nav"><a href="login.html">Home</a><a href="stocks.html">Stocks</a><a class="active" href="account.html">Account</a></nav></header>
+
+        <main class="page"><div class="hero-row"><div><h1>Account Overview</h1><p class="subtitle">Manage your portfolio, cash, and transaction history.</p></div><div><strong data-user-field="full_name">{{USER_FULL_NAME}}</strong><br><span data-user-field="username">{{USERNAME}}</span><br><span data-user-field="email">{{USER_EMAIL}}</span></div></div>
+
+        <div class="grid-2 top-gap">
+        <section class="card"><h2>Cash Account</h2><div class="form-body"><div class="balance" data-user-field="cash_balance">{{CASH_BALANCE}}</div><div class="btn-row top-gap"><a class="btn" id="depositCashLink" href="cash.html#deposit">Deposit Cash</a><a class="btn secondary" id="withdrawCashLink" href="cash.html#withdraw">Withdraw Cash</a></div></div></section>
+
+        <section class="card"><h2>Account Summary</h2><div class="form-body"><div class="summary-row"><span>Total Portfolio Value</span><strong>{{PORTFOLIO_VALUE}}</strong></div><div class="summary-row"><span>Cash Balance</span><strong>{{CASH_BALANCE}}</strong></div><div class="summary-row"><span>Total Account Value</span><strong>{{ACCOUNT_VALUE}}</strong></div></div></section></div>
+
+        <section class="card top-gap"><h2>Your Portfolio</h2><div class="table-wrap"><table><thead><tr><th>Ticker</th><th>Company</th><th>Shares Owned</th><th>Current Price</th><th>Market Value</th><th>Day Change</th><th>Actions</th></tr></thead><tbody id="portfolioRows"><tr data-stock-id="{{STOCK_ID}}"><td>{{TICKER}}</td><td>{{COMPANY_NAME}}</td><td>{{SHARES_OWNED}}</td><td>{{CURRENT_PRICE}}</td><td>{{MARKET_VALUE}}</td><td>{{DAY_CHANGE}}</td><td><a class="btn buy" href="trade.html?stock={{STOCK_ID}}#buy">Buy</a> <a class="btn sell" href="trade.html?stock={{STOCK_ID}}#sell">Sell</a></td></tr></tbody></table></div></section>
+
+        <section class="card top-gap"><h2>Transaction History</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Total Amount</th><th>Status</th></tr></thead><tbody id="transactionRows"><tr><td>{{DATE}}</td><td>{{TYPE}}</td><td>{{TICKER}}</td><td>{{SHARES}}</td><td>{{PRICE}}</td><td>{{TOTAL}}</td><td>{{STATUS}}</td></tr></tbody></table></div></section>
+            </main>
+        </body>
+    </html>

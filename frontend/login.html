@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stockboy | Home</title><link rel="stylesheet" href="styles.css"></head>
+
+    <body>
+        <header class="site-header"><a class="brand" href="login.html">Stockboy</a><nav class="nav"><a class="active" href="login.html">Home</a><a href="stocks.html">Stocks</a><a href="account.html">Account</a></nav></header>
+
+        <main class="page auth"><section class="panel center"><h1>Welcome to Stockboy</h1><p class="subtitle">Log in to your account or create a new one to get started.</p><div class="grid-2 top-gap">
+
+            <form class="card" id="loginForm" name="loginForm" method="post" action="/api/login"><h2>Log In</h2><div class="form-body"><div class="field"><label for="loginUsername">Username</label><input id="loginUsername" name="username" required autocomplete="username"></div><div class="field"><label for="loginPassword">Password</label><input id="loginPassword" name="password" type="password" required autocomplete="current-password"></div>
+
+            <button class="btn wide" id="loginButton" name="loginButton" type="submit">Log In</button></div></form>
+
+            <form class="card" id="registerForm" name="registerForm" method="post" action="/api/users"><h2>Create a New Account</h2><div class="form-body"><div class="field"><label for="fullName">Full Name</label><input id="fullName" name="full_name" required></div><div class="field"><label for="newUsername">Username</label><input id="newUsername" name="username" required></div><div class="field"><label for="email">Email Address</label><input id="email" name="email" type="email" required></div><div class="field"><label for="newPassword">Password</label><input id="newPassword" name="password" type="password" required></div>
+
+            <button class="btn wide" id="registerButton" name="registerButton" type="submit">Register</button></div></form></div></section>
+        </main>
+    </body>
+</html>

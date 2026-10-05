@@ -1,0 +1,439 @@
+```css
+/* =========================================================
+ * Stockboy - Main Stylesheet
+ * ========================================================= */
+
+
+/* ---------------------------------------------------------
+ * Color Variables
+ * --------------------------------------------------------- */
+
+:root {
+    --ink: #17212b;
+    --muted: #66717e;
+    --line: #aab4bf;
+    --panel: #f4f6f8;
+    --dark: #59636e;
+    --good: #2f8f5b;
+    --bad: #c84b50;
+    --white: #fff;
+}
+
+
+/* ---------------------------------------------------------
+ * Global Styles
+ * --------------------------------------------------------- */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--ink);
+    background: #fff;
+}
+
+a {
+    color: inherit;
+}
+
+h1 {
+    margin: 0 0 8px;
+}
+
+
+/* ---------------------------------------------------------
+ * Header and Navigation
+ * --------------------------------------------------------- */
+
+.site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 18px 5%;
+
+    background: #f7f8fa;
+    border-bottom: 1px solid var(--line);
+}
+
+.brand {
+    font-size: 32px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.brand::before {
+    content: "↗ ";
+}
+
+.nav {
+    display: flex;
+    gap: 12px;
+}
+
+.nav a {
+    padding: 14px 24px;
+
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.nav a:hover,
+.nav a.active {
+    background: #dfe4ea;
+}
+
+
+/* ---------------------------------------------------------
+ * Main Page Layout
+ * --------------------------------------------------------- */
+
+.page {
+    width: min(1400px, 94%);
+    margin: 28px auto;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.top-gap {
+    margin-top: 20px;
+}
+
+.center {
+    text-align: center;
+}
+
+
+/* ---------------------------------------------------------
+ * Panels and Cards
+ * --------------------------------------------------------- */
+
+.panel,
+.card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+}
+
+.panel {
+    padding: 28px;
+}
+
+.card {
+    overflow: hidden;
+}
+
+.card h2,
+.card h3 {
+    margin: 0;
+    padding: 16px 20px;
+
+    background: var(--panel);
+}
+
+
+/* ---------------------------------------------------------
+ * Text
+ * --------------------------------------------------------- */
+
+.subtitle {
+    margin-top: 0;
+    color: var(--muted);
+}
+
+.muted {
+    color: var(--muted);
+}
+
+
+/* ---------------------------------------------------------
+ * Forms
+ * --------------------------------------------------------- */
+
+.form-body {
+    padding: 20px;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 7px;
+
+    font-weight: 700;
+}
+
+.field input,
+.field select {
+    width: 100%;
+    padding: 13px;
+
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+}
+
+.inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.check-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+
+/* ---------------------------------------------------------
+ * Buttons
+ * --------------------------------------------------------- */
+
+.btn {
+    display: inline-block;
+    padding: 12px 20px;
+
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+
+    background: var(--dark);
+    border: 1px solid var(--dark);
+    border-radius: 4px;
+
+    cursor: pointer;
+}
+
+.btn.secondary {
+    color: var(--ink);
+    background: #e8ecf0;
+}
+
+.btn.buy {
+    background: var(--good);
+    border-color: var(--good);
+}
+
+.btn.sell,
+.btn.danger {
+    background: var(--bad);
+    border-color: var(--bad);
+}
+
+.btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.wide {
+    width: 100%;
+}
+
+
+/* ---------------------------------------------------------
+ * Account Balance and Summary
+ * --------------------------------------------------------- */
+
+.balance {
+    font-size: 34px;
+    font-weight: 700;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+
+    padding: 10px 0;
+
+    border-bottom: 1px solid #d8dde2;
+}
+
+.summary-row:last-child {
+    border-bottom: 0;
+}
+
+
+/* ---------------------------------------------------------
+ * Tables
+ * --------------------------------------------------------- */
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    min-width: 850px;
+
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 12px;
+
+    text-align: left;
+    white-space: nowrap;
+
+    border-bottom: 1px solid #ccd3da;
+}
+
+th {
+    background: #eef1f4;
+}
+
+
+/* ---------------------------------------------------------
+ * Placeholder Data
+ * --------------------------------------------------------- */
+
+.placeholder {
+    display: inline-block;
+
+    min-width: 70px;
+    height: 16px;
+
+    vertical-align: middle;
+
+    background: #d9dee4;
+    border-radius: 3px;
+}
+
+.placeholder.long {
+    min-width: 130px;
+}
+
+
+/* ---------------------------------------------------------
+ * Stock Information
+ * --------------------------------------------------------- */
+
+.hero-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.stock-price {
+    font-size: 32px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.chart-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 270px;
+
+    color: var(--muted);
+
+    border: 1px solid var(--line);
+
+    background: repeating-linear-gradient(
+        0deg,
+        #fff,
+        #fff 53px,
+        #e7ebef 54px
+    );
+}
+
+
+/* ---------------------------------------------------------
+ * Notices
+ * --------------------------------------------------------- */
+
+.notice {
+    padding: 12px;
+
+    background: #eef1f4;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+}
+
+
+/* ---------------------------------------------------------
+ * Authentication Pages
+ * --------------------------------------------------------- */
+
+.auth {
+    max-width: 1100px;
+    margin: auto;
+}
+
+
+/* ---------------------------------------------------------
+ * Administrator Layout
+ * --------------------------------------------------------- */
+
+.admin-layout {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 20px;
+}
+
+.sidebar {
+    padding: 10px;
+    border: 1px solid var(--line);
+}
+
+.sidebar a {
+    display: block;
+
+    padding: 13px;
+    margin-bottom: 5px;
+
+    text-decoration: none;
+}
+
+.sidebar a.active,
+.sidebar a:hover {
+    background: #e4e8ec;
+}
+
+
+/* ---------------------------------------------------------
+ * Responsive / Mobile Layout
+ * --------------------------------------------------------- */
+
+@media (max-width: 800px) {
+
+    .site-header,
+    .hero-row {
+        flex-direction: column;
+    }
+
+    .nav {
+        flex-wrap: wrap;
+    }
+
+    .grid-2,
+    .grid-3,
+    .admin-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .brand {
+        font-size: 26px;
+    }
+}
+```
