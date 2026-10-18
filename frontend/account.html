@@ -2,9 +2,30 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stockboy | Account</title><link rel="stylesheet" href="styles.css"></head>
 
     <body>
-        <header class="site-header"><a class="brand" href="login.html">Stockboy</a><nav class="nav"><a href="login.html">Home</a><a href="stocks.html">Stocks</a><a class="active" href="account.html">Account</a></nav></header>
+        <header class="site-header"><a class="brand" href="index.html">Stockboy</a><nav class="nav"><a href="login.html">Home</a><a href="stocks.html">Stocks</a><a class="active" href="account.html">Account</a></nav>
+		
+		<a href="/api/logout">Logout</a>
+		</header>
 
-        <main class="page"><div class="hero-row"><div><h1>Account Overview</h1><p class="subtitle">Manage your portfolio, cash, and transaction history.</p></div><div><strong data-user-field="full_name">{{USER_FULL_NAME}}</strong><br><span data-user-field="username">{{USERNAME}}</span><br><span data-user-field="email">{{USER_EMAIL}}</span></div></div>
+        <main class="page"><div class="hero-row"><div><h1>Account Overview</h1><p class="subtitle">Manage your portfolio, cash, and transaction history.</p></div><div>
+
+<!-- replaced placeholders for user account - bryan-->
+
+            <strong data-user-field="full_name">No user found...</strong><br>
+<span data-user-field="username"></span><br>
+<span data-user-field="email"></span>
+<!-- admin header - bryan -->
+
+<a
+    id="adminButton"
+    class="btn danger"
+    href="admin.html"
+    style="display: none; margin-top: 15px;"
+>
+    ADMIN
+</a>
+
+        </div></div>
 
         <div class="grid-2 top-gap">
         <section class="card"><h2>Cash Account</h2><div class="form-body"><div class="balance" data-user-field="cash_balance">{{CASH_BALANCE}}</div><div class="btn-row top-gap"><a class="btn" id="depositCashLink" href="cash.html#deposit">Deposit Cash</a><a class="btn secondary" id="withdrawCashLink" href="cash.html#withdraw">Withdraw Cash</a></div></div></section>
@@ -15,5 +36,38 @@
 
         <section class="card top-gap"><h2>Transaction History</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Total Amount</th><th>Status</th></tr></thead><tbody id="transactionRows"><tr><td>{{DATE}}</td><td>{{TYPE}}</td><td>{{TICKER}}</td><td>{{SHARES}}</td><td>{{PRICE}}</td><td>{{TOTAL}}</td><td>{{STATUS}}</td></tr></tbody></table></div></section>
             </main>
+
+
+
+
+    <!--script needed for account info - bryan -->
+<script>
+fetch("/api/me")
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = "login.html";
+            return;
+        }
+
+        return response.json();
+    })
+    .then(user => {
+    if (!user) return;
+
+    document.querySelector('[data-user-field="full_name"]').textContent =
+        user.full_name;
+
+    document.querySelector('[data-user-field="username"]').textContent =
+        "@" + user.username;
+
+    document.querySelector('[data-user-field="email"]').textContent =
+        user.email;
+
+    if (user.role === "admin") {
+        document.getElementById("adminButton").style.display = "inline-block";
+    }
+});
+</script>
+
         </body>
     </html>
