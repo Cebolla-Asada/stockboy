@@ -64,5 +64,81 @@ def db_test():
         "database": database[0]
     }
 
+# Function 1: Retrieve all available stocks
+@app.route("/api/stocks", methods=["GET"])
+def get_stocks():
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT ticker, company_name, current_price,
+                   opening_price, day_high, day_low
+            FROM stocks
+            ORDER BY ticker
+        """)
+
+        stocks = cursor.fetchall()
+
+        for stock in stocks:
+            stock["current_price"] = float(stock["current_price"])
+            stock["opening_price"] = float(stock["opening_price"])
+            stock["day_high"] = float(stock["day_high"])
+            stock["day_low"] = float(stock["day_low"])
+
+        return {"status": "success", "stocks": stocks}
+
+    except Exception:
+        app.logger.exception("Failed to retrieve stocks")
+        return {"status": "error", "message": "Unable to retrieve stocks"}, 500
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None and connection.is_connected():
+            connection.close()
+
+# Function 2: Retrieve one stock by ticker
+@app.route("/api/stocks/<ticker>", methods=["GET"])
+def get_stock(ticker):
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT ticker, company_name, current_price,
+                   opening_price, day_high, day_low
+            FROM stocks
+            WHERE ticker = %s
+        """, (ticker.upper(),))
+
+        stock = cursor.fetchone()
+
+        if stock is None:
+            return {"status": "error", "message": "Stock not found"}, 404
+
+        for field in ["current_price", "opening_price",
+                      "day_high", "day_low"]:
+            stock[field] = float(stock[field])
+
+        return {"status": "success", "stock": stock}
+
+    except Exception:
+        app.logger.exception("Failed to retrieve stock")
+        return {"status": "error", "message": "Unable to retrieve stock"}, 500
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connection is not None and connection.is_connected():
+            connection.close()
+
+
 if __name__ == "__main__":
     app.run(debug=True)
