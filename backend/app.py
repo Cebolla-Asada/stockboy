@@ -10,7 +10,7 @@ env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 app = Flask(__name__)
-app.secret_key = os.getenv("login123")
+app.secret_key = os.getenv("SECRET_KEY")
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 ##connection with , sql server, db password should be
 ##your own personal password in .env from MySQL 
@@ -104,7 +104,8 @@ def register():
     
     
     
-##for passwords
+##for loginpasswords
+## login route
 @app.route("/api/login", methods=["POST"])
 def login():
     username = request.form.get("username")
@@ -134,7 +135,40 @@ def login():
     session["role"] = user["role"]
 
     return redirect("/frontend/account.html")
-    
+
+
+## route for account.html to get the logged-in user's info
+@app.route("/api/me")
+def current_user():
+    if "user_id" not in session:
+        return {"error": "Not logged in"}, 401
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT user_id, full_name, username, email, role
+        FROM users
+        WHERE user_id = %s
+        """,
+        (session["user_id"],)
+    )
+
+    user = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    return user
+
+##route for logout button
+@app.route("/api/logout")
+def logout():
+    session.clear()
+    return redirect("/frontend/index.html")
+
+
     
 @app.route("/api/stocks", methods=["GET"])
 def get_stocks():
@@ -172,7 +206,7 @@ def get_stocks():
         if connection is not None and connection.is_connected():
             connection.close()
 
-# Function 2: Retrieve one stock by ticker
+
 @app.route("/api/stocks/<ticker>", methods=["GET"])
 def get_stock(ticker):
     connection = None
