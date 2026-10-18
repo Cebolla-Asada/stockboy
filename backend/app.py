@@ -1,13 +1,16 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request, redirect, session
+from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+
 env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 app = Flask(__name__)
+app.secret_key = os.getenv("login123")
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 ##connection with , sql server, db password should be
 ##your own personal password in .env from MySQL 
@@ -63,8 +66,76 @@ def db_test():
         "status": "success",
         "database": database[0]
     }
+@app.route("/api/users", methods=["POST"])
+def register():
+    full_name = request.form.get("full_name")
+    username = request.form.get("username")
+    email = request.form.get("email")
+    password = request.form.get("password")
 
-# Function 1: Retrieve all available stocks
+    if not full_name or not username or not email or not password:
+        return "All fields are required.", 400
+
+    password_hash = generate_password_hash(password, method="pbkdf2:sha256")
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(
+            """
+            INSERT INTO users (full_name, username, email, password_hash)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (full_name, username, email, password_hash)
+        )
+
+        connection.commit()
+
+    except mysql.connector.IntegrityError:
+        cursor.close()
+        connection.close()
+        return "Username or email already exists.", 409
+
+    cursor.close()
+    connection.close()
+
+    return redirect("/frontend/login.html")
+    
+    
+    
+##for passwords
+@app.route("/api/login", methods=["POST"])
+def login():
+    username = request.form.get("username")
+    password = request.form.get("password")
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute(
+        "SELECT * FROM users WHERE username = %s",
+        (username,)
+    )
+
+    user = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    if user is None:
+        return "Invalid username or password.", 401
+
+    if not check_password_hash(user["password_hash"], password):
+        return "Invalid username or password.", 401
+
+    session["user_id"] = user["user_id"]
+    session["username"] = user["username"]
+    session["role"] = user["role"]
+
+    return redirect("/frontend/account.html")
+    
+    
 @app.route("/api/stocks", methods=["GET"])
 def get_stocks():
     connection = None
@@ -138,6 +209,7 @@ def get_stock(ticker):
             cursor.close()
         if connection is not None and connection.is_connected():
             connection.close()
+
 
 
 if __name__ == "__main__":

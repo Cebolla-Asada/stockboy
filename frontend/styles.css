@@ -1,12 +1,4 @@
-```css
-/* =========================================================
- * Stockboy - Main Stylesheet
- * ========================================================= */
-
-
-/* ---------------------------------------------------------
- * Color Variables
- * --------------------------------------------------------- */
+/* Stockboy - Modernized Stylesheet */
 
 :root {
     --ink: #17212b;
@@ -17,175 +9,191 @@
     --good: #2f8f5b;
     --bad: #c84b50;
     --white: #fff;
+    --page-bg: #f7f8fa;
+    --soft-line: #d9dee4;
+    --shadow-sm: 0 2px 8px rgba(23, 33, 43, 0.06);
+    --shadow-md: 0 8px 24px rgba(23, 33, 43, 0.10);
+    --radius: 10px;
+    --radius-sm: 7px;
 }
-
-
-/* ---------------------------------------------------------
- * Global Styles
- * --------------------------------------------------------- */
 
 * {
     box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
     color: var(--ink);
-    background: #fff;
+    background: var(--page-bg);
+    line-height: 1.5;
 }
 
 a {
     color: inherit;
 }
 
-h1 {
-    margin: 0 0 8px;
+h1, h2, h3 {
+    line-height: 1.2;
 }
 
+h1 {
+    margin: 0 0 8px;
+    font-size: clamp(30px, 4vw, 44px);
+}
 
-/* ---------------------------------------------------------
- * Header and Navigation
- * --------------------------------------------------------- */
+button, input, select {
+    font: inherit;
+}
 
 .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    padding: 18px 5%;
-
-    background: #f7f8fa;
-    border-bottom: 1px solid var(--line);
+    padding: 16px 5%;
+    background: rgba(247, 248, 250, 0.96);
+    border-bottom: 1px solid var(--soft-line);
+    box-shadow: 0 1px 8px rgba(23, 33, 43, 0.05);
+    backdrop-filter: blur(10px);
 }
 
 .brand {
-    font-size: 32px;
-    font-weight: 700;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
     text-decoration: none;
 }
 
 .brand::before {
     content: "↗ ";
+    color: var(--good);
 }
 
 .nav {
     display: flex;
-    gap: 12px;
+    gap: 8px;
+    align-items: center;
 }
 
 .nav a {
-    padding: 14px 24px;
-
+    padding: 10px 16px;
+    font-weight: 600;
     text-decoration: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .nav a:hover,
 .nav a.active {
-    background: #dfe4ea;
+    background: #e3e8ed;
 }
 
-
-/* ---------------------------------------------------------
- * Main Page Layout
- * --------------------------------------------------------- */
+.nav a:hover {
+    transform: translateY(-1px);
+}
 
 .page {
-    width: min(1400px, 94%);
-    margin: 28px auto;
+    width: min(1400px, 92%);
+    margin: 36px auto 56px;
 }
 
 .grid-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
 }
 
 .grid-3 {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
 }
 
 .top-gap {
-    margin-top: 20px;
+    margin-top: 22px;
 }
 
 .center {
     text-align: center;
 }
 
-
-/* ---------------------------------------------------------
- * Panels and Cards
- * --------------------------------------------------------- */
-
 .panel,
 .card {
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 5px;
+    background: var(--white);
+    border: 1px solid var(--soft-line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
 }
 
 .panel {
-    padding: 28px;
+    padding: 32px;
 }
 
 .card {
     overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .card h2,
 .card h3 {
     margin: 0;
-    padding: 16px 20px;
-
+    padding: 17px 20px;
     background: var(--panel);
+    border-bottom: 1px solid var(--soft-line);
 }
-
-
-/* ---------------------------------------------------------
- * Text
- * --------------------------------------------------------- */
 
 .subtitle {
     margin-top: 0;
     color: var(--muted);
+    font-size: 1.03rem;
 }
 
 .muted {
     color: var(--muted);
 }
 
-
-/* ---------------------------------------------------------
- * Forms
- * --------------------------------------------------------- */
-
 .form-body {
-    padding: 20px;
+    padding: 22px;
 }
 
 .field {
-    margin-bottom: 16px;
+    margin-bottom: 17px;
 }
 
 .field label {
     display: block;
     margin-bottom: 7px;
-
     font-weight: 700;
 }
 
 .field input,
 .field select {
     width: 100%;
-    padding: 13px;
+    padding: 13px 14px;
+    color: var(--ink);
+    background: var(--white);
+    border: 1px solid #c5cdd6;
+    border-radius: var(--radius-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
 
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 4px;
+.field input:focus,
+.field select:focus {
+    outline: none;
+    border-color: var(--dark);
+    box-shadow: 0 0 0 3px rgba(89, 99, 110, 0.12);
 }
 
 .inline {
@@ -197,32 +205,37 @@ h1 {
 .check-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 10px;
 }
-
-
-/* ---------------------------------------------------------
- * Buttons
- * --------------------------------------------------------- */
 
 .btn {
     display: inline-block;
-    padding: 12px 20px;
-
-    color: #fff;
+    padding: 11px 18px;
+    color: var(--white);
     font-weight: 700;
+    text-align: center;
     text-decoration: none;
-
     background: var(--dark);
     border: 1px solid var(--dark);
-    border-radius: 4px;
-
+    border-radius: var(--radius-sm);
     cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(23, 33, 43, 0.12);
+    filter: brightness(0.96);
+}
+
+.btn:active {
+    transform: translateY(0);
 }
 
 .btn.secondary {
     color: var(--ink);
     background: #e8ecf0;
+    border-color: #d1d8df;
 }
 
 .btn.buy {
@@ -246,33 +259,24 @@ h1 {
     width: 100%;
 }
 
-
-/* ---------------------------------------------------------
- * Account Balance and Summary
- * --------------------------------------------------------- */
-
 .balance {
-    font-size: 34px;
-    font-weight: 700;
+    margin-top: 6px;
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -1px;
 }
 
 .summary-row {
     display: flex;
     justify-content: space-between;
-
-    padding: 10px 0;
-
-    border-bottom: 1px solid #d8dde2;
+    gap: 18px;
+    padding: 12px 0;
+    border-bottom: 1px solid #e0e5ea;
 }
 
 .summary-row:last-child {
     border-bottom: 0;
 }
-
-
-/* ---------------------------------------------------------
- * Tables
- * --------------------------------------------------------- */
 
 .table-wrap {
     overflow-x: auto;
@@ -281,60 +285,55 @@ h1 {
 table {
     width: 100%;
     min-width: 850px;
-
     border-collapse: collapse;
 }
 
 th,
 td {
-    padding: 12px;
-
+    padding: 14px;
     text-align: left;
     white-space: nowrap;
-
-    border-bottom: 1px solid #ccd3da;
+    border-bottom: 1px solid #d9e0e6;
 }
 
 th {
+    font-size: 0.9rem;
+    color: #3f4b56;
     background: #eef1f4;
 }
 
+tbody tr {
+    transition: background-color 0.15s ease;
+}
 
-/* ---------------------------------------------------------
- * Placeholder Data
- * --------------------------------------------------------- */
+tbody tr:hover {
+    background: #fafbfc;
+}
 
 .placeholder {
     display: inline-block;
-
     min-width: 70px;
     height: 16px;
-
     vertical-align: middle;
-
     background: #d9dee4;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 .placeholder.long {
     min-width: 130px;
 }
 
-
-/* ---------------------------------------------------------
- * Stock Information
- * --------------------------------------------------------- */
-
 .hero-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 20px;
+    gap: 24px;
 }
 
 .stock-price {
-    font-size: 32px;
-    font-weight: 700;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
     text-align: right;
 }
 
@@ -342,13 +341,10 @@ th {
     display: flex;
     align-items: center;
     justify-content: center;
-
     height: 270px;
-
     color: var(--muted);
-
-    border: 1px solid var(--line);
-
+    border: 1px solid var(--soft-line);
+    border-radius: var(--radius);
     background: repeating-linear-gradient(
         0deg,
         #fff,
@@ -357,52 +353,41 @@ th {
     );
 }
 
-
-/* ---------------------------------------------------------
- * Notices
- * --------------------------------------------------------- */
-
 .notice {
-    padding: 12px;
-
+    padding: 13px 14px;
+    color: #4b5661;
     background: #eef1f4;
-    border: 1px solid var(--line);
-    border-radius: 4px;
+    border: 1px solid #d5dce3;
+    border-radius: var(--radius-sm);
 }
-
-
-/* ---------------------------------------------------------
- * Authentication Pages
- * --------------------------------------------------------- */
 
 .auth {
     max-width: 1100px;
     margin: auto;
 }
 
-
-/* ---------------------------------------------------------
- * Administrator Layout
- * --------------------------------------------------------- */
-
 .admin-layout {
     display: grid;
-    grid-template-columns: 210px 1fr;
-    gap: 20px;
+    grid-template-columns: 220px 1fr;
+    gap: 22px;
 }
 
 .sidebar {
     padding: 10px;
-    border: 1px solid var(--line);
+    background: var(--white);
+    border: 1px solid var(--soft-line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
 }
 
 .sidebar a {
     display: block;
-
-    padding: 13px;
+    padding: 12px 13px;
     margin-bottom: 5px;
-
+    font-weight: 600;
     text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s ease;
 }
 
 .sidebar a.active,
@@ -410,30 +395,85 @@ th {
     background: #e4e8ec;
 }
 
+.home-hero {
+    text-align: center;
+    padding: 50px 24px;
+}
 
-/* ---------------------------------------------------------
- * Responsive / Mobile Layout
- * --------------------------------------------------------- */
+.home-cat {
+    display: block;
+    width: 180px;
+    max-width: 80%;
+    margin: 24px auto;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+}
+
+.home-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+    margin-top: 26px;
+}
+
+.home-card {
+    padding: 26px;
+    text-align: center;
+}
+
+.home-card h2 {
+    padding: 0;
+    margin-bottom: 10px;
+    background: transparent;
+    border-bottom: 0;
+}
+
+.home-card p {
+    min-height: 48px;
+    color: var(--muted);
+}
 
 @media (max-width: 800px) {
-
     .site-header,
     .hero-row {
         flex-direction: column;
     }
 
+    .site-header {
+        align-items: flex-start;
+        gap: 14px;
+    }
+
     .nav {
+        width: 100%;
         flex-wrap: wrap;
+    }
+
+    .nav a {
+        padding: 9px 12px;
     }
 
     .grid-2,
     .grid-3,
-    .admin-layout {
+    .admin-layout,
+    .home-grid {
         grid-template-columns: 1fr;
     }
 
     .brand {
         font-size: 26px;
     }
+
+    .page {
+        width: min(94%, 1400px);
+        margin-top: 24px;
+    }
+
+    .panel {
+        padding: 24px;
+    }
+
+    .stock-price {
+        text-align: left;
+    }
 }
-```
