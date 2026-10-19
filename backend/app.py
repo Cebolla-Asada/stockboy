@@ -169,7 +169,7 @@ def logout():
     return redirect("/frontend/index.html")
 
 
-    
+    #### view stock ticker function by melody
 @app.route("/api/stocks", methods=["GET"])
 def get_stocks():
     connection = None
@@ -244,6 +244,63 @@ def get_stock(ticker):
         if connection is not None and connection.is_connected():
             connection.close()
 
+### admin creation stock 
+
+### admin creation stock - bryan
+@app.route("/api/admin/stocks", methods=["POST"])
+def create_stock():
+
+    if "user_id" not in session:
+        return "You must be logged in.", 401
+
+    if session.get("role") != "admin":
+        return "Admin access required.", 403
+
+    ticker = request.form.get("ticker")
+    company_name = request.form.get("company_name")
+    available_shares = request.form.get("volume")
+    initial_price = request.form.get("initial_price")
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(
+            """
+            INSERT INTO stocks
+            (
+                ticker,
+                company_name,
+                available_shares,
+                current_price,
+                opening_price,
+                day_high,
+                day_low
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                ticker.upper(),
+                company_name,
+                available_shares,
+                initial_price,
+                initial_price,
+                initial_price,
+                initial_price
+            )
+        )
+
+        connection.commit()
+
+    except mysql.connector.IntegrityError:
+        cursor.close()
+        connection.close()
+        return "That ticker already exists.", 409
+
+    cursor.close()
+    connection.close()
+
+    return redirect("/frontend/stocks.html")
 
 
 if __name__ == "__main__":
