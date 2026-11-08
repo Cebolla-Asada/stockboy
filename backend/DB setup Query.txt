@@ -1,0 +1,138 @@
+
+-- ============================================
+-- STOCKBOY DATABASE SETUP
+-- MySQL
+-- ============================================
+
+CREATE DATABASE IF NOT EXISTS stockboy;
+
+USE stockboy;
+
+
+-- ============================================
+-- 1. USERS
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('customer', 'admin') NOT NULL DEFAULT 'customer',
+    cash_balance DECIMAL(12,2) NOT NULL DEFAULT 10000.00,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CHECK (cash_balance >= 0)
+);
+
+
+-- ============================================
+-- 2. STOCKS
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS stocks (
+    stock_id INT AUTO_INCREMENT PRIMARY KEY,
+    ticker VARCHAR(10) NOT NULL UNIQUE,
+    company_name VARCHAR(100) NOT NULL,
+    current_price DECIMAL(12,2) NOT NULL,
+    opening_price DECIMAL(12,2) NOT NULL,
+    day_high DECIMAL(12,2) NOT NULL,
+    day_low DECIMAL(12,2) NOT NULL,
+    available_shares INT NOT NULL DEFAULT 0,
+
+    CHECK (current_price > 0),
+    CHECK (available_shares >= 0)
+);
+
+
+-- ============================================
+-- 3. HOLDINGS
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS holdings (
+    holding_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    stock_id INT NOT NULL,
+    share_num INT NOT NULL DEFAULT 0,
+
+    FOREIGN KEY (user_id)
+        REFERENCES users(user_id),
+
+    FOREIGN KEY (stock_id)
+        REFERENCES stocks(stock_id),
+
+    UNIQUE (user_id, stock_id),
+
+    CHECK (share_num >= 0)
+);
+
+
+-- ============================================
+-- 4. TRANSACTIONS
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS transactions (
+    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    stock_id INT NOT NULL,
+    transaction_type ENUM('BUY', 'SELL') NOT NULL,
+    share_num INT NOT NULL,
+    price DECIMAL(12,2) NOT NULL,
+    total_amount DECIMAL(14,2) NOT NULL,
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id)
+        REFERENCES users(user_id),
+
+    FOREIGN KEY (stock_id)
+        REFERENCES stocks(stock_id),
+
+    CHECK (share_num > 0),
+    CHECK (price > 0),
+    CHECK (total_amount > 0)
+);
+
+
+-- ============================================
+-- 5. INITIAL STOCK DATA
+-- ============================================
+
+INSERT IGNORE INTO stocks
+    (ticker, company_name, current_price,
+     opening_price, day_high, day_low,
+     available_shares)
+VALUES
+    ('AAPL', 'Apple Inc.',
+     258.90, 258.90, 258.90, 258.90, 1000000),
+
+    ('AMZN', 'Amazon.com Inc.',
+     225.60, 225.60, 225.60, 225.60, 1000000),
+
+    ('DIS', 'The Walt Disney Company',
+     118.45, 118.45, 118.45, 118.45, 1000000),
+
+    ('GOOGL', 'Alphabet Inc. (Google)',
+     205.75, 205.75, 205.75, 205.75, 1000000),
+
+    ('KO', 'The Coca-Cola Company',
+     69.85, 69.85, 69.85, 69.85, 1000000),
+
+    ('SBUX', 'Starbucks Corporation',
+     98.30, 98.30, 98.30, 98.30, 1000000);
+
+
+-- ============================================
+-- 6. VERIFY TABLES
+-- ============================================
+
+SHOW TABLES;
+
+SELECT * FROM stocks;
+
+SELECT user_id, username, role, cash_balance
+FROM users;
+
+SELECT * FROM holdings;
+
+SELECT * FROM transactions;

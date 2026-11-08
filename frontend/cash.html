@@ -1,19 +1,232 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stockboy | Manage Cash</title><link rel="stylesheet" href="styles.css"></head>
 
-    <body><header class="site-header"><a class="brand" href="index.html">Stockboy</a><nav class="nav"><a href="login.html">Home</a><a href="stocks.html">Stocks</a><a class="active" href="account.html">Account</a></nav></header>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stockboy | Manage Cash</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 
-        <main class="page"><div class="hero-row"><div><h1>Manage Cash</h1><p class="subtitle">Deposit or withdraw funds from your cash account.</p></div>
+<body>
+    <header class="site-header">
+        <a class="brand" href="index.html">Stockboy</a>
+        <nav class="nav">
+            <a href="login.html">Home</a>
+            <a href="stocks.html">Stocks</a>
+            <a class="active" href="account.html">Account</a>
+        </nav>
+    </header>
 
-            <section class="card"><div class="form-body center"><strong>Cash Balance</strong><div class="balance" data-user-field="cash_balance">{{CASH_BALANCE}}</div></div></section></div>
+    <main class="page">
+        <div class="hero-row">
+            <div>
+                <h1>Manage Cash</h1>
+                <p class="subtitle">
+                    Deposit or withdraw funds from your cash account.
+                </p>
+            </div>
 
-            <div class="grid-2 top-gap">
-            <form class="card" id="deposit" name="depositForm" method="post" action="/api/account/deposit"><h2>Deposit Cash</h2><div class="form-body"><div class="field"><label for="depositAmount">Amount to Deposit</label><input id="depositAmount" name="amount" type="number" min="0.01" step="0.01" required></div>
+            <section class="card">
+                <div class="form-body center">
+                    <strong>Cash Balance</strong>
+                    <div class="balance" id="cashBalance">Loading...</div>
+                </div>
+            </section>
+        </div>
 
-            <button class="btn wide" id="depositButton" name="depositButton" type="submit">Deposit Cash</button></div></form>
+        <div class="grid-2 top-gap">
 
-            <form class="card" id="withdraw" name="withdrawForm" method="post" action="/api/account/withdraw"><h2>Withdraw Cash</h2><div class="form-body"><div class="field"><label for="withdrawAmount">Amount to Withdraw</label><input id="withdrawAmount" name="amount" type="number" min="0.01" step="0.01" required></div><div class="notice">Available cash: <strong>{{CASH_BALANCE}}</strong></div>
+            <form class="card" id="deposit" name="depositForm">
+                <h2>Deposit Cash</h2>
+                <div class="form-body">
+                    <div class="field">
+                        <label for="depositAmount">Amount to Deposit</label>
+                        <input
+                            id="depositAmount"
+                            name="amount"
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            required
+                        >
+                    </div>
 
-            <button class="btn wide top-gap" id="withdrawButton" name="withdrawButton" type="submit">Withdraw Cash</button></div></form></div><p><a href="account.html">← Back to Account Overview</a></p>
-        </main>
-    </body>
+                    <button class="btn wide" id="depositButton"
+                            name="depositButton" type="submit" disabled>
+                        Deposit Cash
+                    </button>
+                </div>
+            </form>
+
+            <form class="card" id="withdraw" name="withdrawForm">
+                <h2>Withdraw Cash</h2>
+                <div class="form-body">
+                    <div class="field">
+                        <label for="withdrawAmount">Amount to Withdraw</label>
+                        <input
+                            id="withdrawAmount"
+                            name="amount"
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            required
+                        >
+                    </div>
+
+                    <div class="notice">
+                        Available cash:
+                        <strong id="availableCash">Loading...</strong>
+                    </div>
+
+                    <button class="btn wide top-gap" id="withdrawButton"
+                            name="withdrawButton" type="submit" disabled>
+                        Withdraw Cash
+                    </button>
+                </div>
+            </form>
+
+        </div>
+
+        <p id="cashMessage" class="top-gap" role="status"></p>
+
+        <p><a href="account.html">← Back to Account Overview</a></p>
+    </main>
+
+    <script>
+        let cashBalance = 0;
+        let busy = false;
+        let balanceLoaded = false;
+
+        const balanceDisplay = document.getElementById("cashBalance");
+        const availableCash = document.getElementById("availableCash");
+        const cashMessage = document.getElementById("cashMessage");
+
+        const depositButton = document.getElementById("depositButton");
+        const withdrawButton = document.getElementById("withdrawButton");
+
+        function formatMoney(amount) {
+            return Number(amount).toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD"
+            });
+        }
+
+        function updateButtons() {
+            depositButton.disabled = busy || !balanceLoaded;
+            withdrawButton.disabled = busy || !balanceLoaded;
+        }
+
+        async function loadBalance() {
+            const response = await fetch("/api/me");
+
+            if (response.status === 401) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Unable to retrieve account information.");
+            }
+
+            const user = await response.json();
+            cashBalance = Number(user.cash_balance);
+
+            if (!Number.isFinite(cashBalance)) {
+                throw new Error("Invalid cash balance returned by server.");
+            }
+
+            balanceDisplay.textContent = formatMoney(cashBalance);
+            availableCash.textContent = formatMoney(cashBalance);
+
+            balanceLoaded = true;
+            updateButtons();
+        }
+
+        async function submitCashAction(type, amount, button) {
+            if (!Number.isFinite(amount) || amount <= 0 ||
+                !Number.isInteger(amount * 100)) {
+                cashMessage.textContent =
+                    "Please enter a valid amount (up to two decimal places).";
+                return;
+            }
+
+            if (type === "withdraw" && amount > cashBalance) {
+                cashMessage.textContent = "Insufficient funds.";
+                return;
+            }
+
+            busy = true;
+            updateButtons();
+            cashMessage.textContent = "Processing...";
+
+            try {
+                const response = await fetch(`/api/${type}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        amount: amount.toFixed(2)
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    cashMessage.textContent =
+                        result.message || "Transaction failed.";
+                    return;
+                }
+
+                cashMessage.textContent = result.message;
+
+                // Refresh from database after successful transaction.
+                await loadBalance();
+
+                document.getElementById(
+                    type === "deposit" ? "depositAmount" : "withdrawAmount"
+                ).value = "";
+
+            } catch (error) {
+                console.error("Cash transaction failed:", error);
+                cashMessage.textContent =
+                    "Unable to complete transaction.";
+
+            } finally {
+                busy = false;
+                updateButtons();
+            }
+        }
+
+        document.getElementById("deposit").addEventListener(
+            "submit", function(event) {
+                event.preventDefault();
+
+                const amount = Number(
+                    document.getElementById("depositAmount").value
+                );
+
+                submitCashAction("deposit", amount, depositButton);
+            }
+        );
+
+        document.getElementById("withdraw").addEventListener(
+            "submit", function(event) {
+                event.preventDefault();
+
+                const amount = Number(
+                    document.getElementById("withdrawAmount").value
+                );
+
+                submitCashAction("withdraw", amount, withdrawButton);
+            }
+        );
+
+        loadBalance().catch(error => {
+            console.error("Unable to load cash balance:", error);
+            cashMessage.textContent = error.message;
+        });
+    </script>
+</body>
 </html>

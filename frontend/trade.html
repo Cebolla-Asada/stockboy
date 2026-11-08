@@ -1,22 +1,398 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stockboy | Trade</title><link rel="stylesheet" href="styles.css"></head>
-    <body>
-        <header class="site-header"><a class="brand" href="index.html">Stockboy</a><nav class="nav"><a href="login.html">Home</a><a class="active" href="stocks.html">Stocks</a><a href="account.html">Account</a></nav></header>
 
-        <main class="page"><p><a href="stocks.html">← Back to Stocks</a></p><div class="hero-row"><div><h1 data-stock-field="company_name">{{COMPANY_NAME}}</h1><p><strong data-stock-field="ticker">{{TICKER}}</strong></p></div><div class="stock-price" data-stock-field="current_price">{{CURRENT_PRICE}}<div class="muted" style="font-size:16px">{{DAY_CHANGE}}</div></div></div><div class="grid-3 top-gap"><div class="chart-placeholder">Stock price chart / generated price history</div>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stockboy | Trade</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 
-        <section class="card"><h2>Stock Details</h2><div class="form-body"><div class="summary-row"><span>Current Price</span><strong>{{CURRENT_PRICE}}</strong></div><div class="summary-row"><span>Opening Price</span><strong>{{OPEN_PRICE}}</strong></div><div class="summary-row"><span>Day High</span><strong>{{DAY_HIGH}}</strong></div><div class="summary-row"><span>Day Low</span><strong>{{DAY_LOW}}</strong></div><div class="summary-row"><span>Market Capitalization</span><strong>{{MARKET_CAP}}</strong></div><div class="summary-row"><span>Trading Volume</span><strong>{{TRADING_VOLUME}}</strong></div><div class="summary-row"><span>Available Shares</span><strong>{{AVAILABLE_SHARES}}</strong></div></div></section><section class="card"><h2>Your Holdings</h2><div class="form-body"><div class="summary-row"><span>Shares Owned</span><strong>{{SHARES_OWNED}}</strong></div><div class="summary-row"><span>Current Value</span><strong>{{HOLDING_VALUE}}</strong></div><div class="summary-row"><span>Cash Available</span><strong>{{CASH_BALANCE}}</strong></div></div></section></div>
+<body>
+    <header class="site-header">
+        <a class="brand" href="index.html">Stockboy</a>
+        <nav class="nav">
+            <a href="login.html">Home</a>
+            <a class="active" href="stocks.html">Stocks</a>
+            <a href="account.html">Account</a>
+        </nav>
+    </header>
 
-    <div class="grid-2 top-gap">
-        <form class="card" id="buy" name="buyStockForm" method="post" action="/api/orders/buy"><h2>Buy Stock</h2><div class="form-body"><input type="hidden" name="stock_id" value="{{STOCK_ID}}"><input type="hidden" name="order_type" value="market"><div class="field"><label for="buyShares">Shares</label><input id="buyShares" name="shares" type="number" min="1" step="1" required></div><div class="notice">Market order at current market price. Estimated cost: {{ESTIMATED_BUY_COST}}</div><button class="btn buy wide top-gap" id="buyStockButton" name="buyStockButton" type="submit">Buy {{TICKER}}</button></div></form>
+    <main class="page">
+        <p><a href="stocks.html">← Back to Stocks</a></p>
 
-        <form class="card" id="sell" name="sellStockForm" method="post" action="/api/orders/sell"><h2>Sell Stock</h2><div class="form-body"><input type="hidden" name="stock_id" value="{{STOCK_ID}}"><input type="hidden" name="order_type" value="market"><div class="field"><label for="sellShares">Shares</label><input id="sellShares" name="shares" type="number" min="1" step="1" required></div><div class="notice">Owned: {{SHARES_OWNED}} shares. Estimated proceeds: {{ESTIMATED_SELL_PROCEEDS}}</div>
+        <div class="hero-row">
+            <div>
+                <h1 id="companyName">Loading...</h1>
+                <p><strong id="stockTicker">--</strong></p>
+            </div>
 
-        <button class="btn sell wide top-gap" id="sellStockButton" name="sellStockButton" type="submit">Sell {{TICKER}}</button></div></form></div>
+            <div class="stock-price">
+                <span id="currentPrice">--</span>
+                <div class="muted" id="dayChange" style="font-size:16px">
+                    --
+                </div>
+            </div>
+        </div>
 
-        <section class="card top-gap"><h2>Open Orders</h2><div class="table-wrap"><table><thead><tr><th>Order ID</th><th>Type</th><th>Shares</th><th>Status</th><th>Action</th></tr></thead><tbody id="openOrderRows"><tr><td>{{ORDER_ID}}</td><td>{{ORDER_TYPE}}</td><td>{{ORDER_SHARES}}</td><td>{{ORDER_STATUS}}</td><td><form method="post" action="/api/orders/cancel"><input type="hidden" name="order_id" value="{{ORDER_ID}}">
+        <div class="grid-3 top-gap">
+            <div class="chart-placeholder">
+                Stock price chart / generated price history
+            </div>
 
-        <button class="btn danger" id="cancelOrderButton-{{ORDER_ID}}" name="cancelOrderButton" type="submit">Cancel Order</button></form></td></tr></tbody></table></div></section>
+            <section class="card">
+                <h2>Stock Details</h2>
+                <div class="form-body">
+                    <div class="summary-row">
+                        <span>Current Price</span>
+                        <strong id="detailCurrentPrice">--</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Opening Price</span>
+                        <strong id="openingPrice">--</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Day High</span>
+                        <strong id="dayHigh">--</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Day Low</span>
+                        <strong id="dayLow">--</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Market Capitalization</span>
+                        <strong id="marketCap">N/A</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Trading Volume</span>
+                        <strong id="tradingVolume">N/A</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Available Shares</span>
+                        <strong id="availableShares">N/A</strong>
+                    </div>
+                </div>
+            </section>
 
-        </main>
-    </body>
+            <section class="card">
+                <h2>Your Holdings</h2>
+                <div class="form-body">
+                    <div class="summary-row">
+                        <span>Shares Owned</span>
+                        <strong id="sharesOwned">0</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Current Value</span>
+                        <strong id="holdingValue">$0.00</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Cash Available</span>
+                        <strong id="cashBalance">--</strong>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="grid-2 top-gap">
+
+            <form class="card" id="buy" name="buyStockForm">
+                <h2>Buy Stock</h2>
+                <div class="form-body">
+                    <div class="field">
+                        <label for="buyShares">Shares</label>
+                        <input id="buyShares" name="shares"
+                               type="number" min="1" step="1" required>
+                    </div>
+
+                    <div class="notice">
+                        Market order at current market price.
+                        Estimated cost: <strong id="estimatedBuyCost">$0.00</strong>
+                    </div>
+
+                    <button class="btn buy wide top-gap"
+                            id="buyStockButton" type="submit" disabled>
+                        Buy Stock
+                    </button>
+                </div>
+            </form>
+
+            <form class="card" id="sell" name="sellStockForm">
+                <h2>Sell Stock</h2>
+                <div class="form-body">
+                    <div class="field">
+                        <label for="sellShares">Shares</label>
+                        <input id="sellShares" name="shares"
+                               type="number" min="1" step="1" required>
+                    </div>
+
+                    <div class="notice">
+                        Owned: <strong id="ownedForSale">0</strong> shares.
+                        Estimated proceeds:
+                        <strong id="estimatedSellProceeds">$0.00</strong>
+                    </div>
+
+                    <button class="btn sell wide top-gap"
+                            id="sellStockButton" type="submit" disabled>
+                        Sell Stock
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <p id="tradeMessage" class="top-gap" role="status"></p>
+    </main>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const requestedStockId = params.get("stock");
+
+        let stockId = null;
+        let stockPrice = 0;
+        let ownedShares = 0;
+        let cashAvailable = 0;
+
+        const buyButton = document.getElementById("buyStockButton");
+        const sellButton = document.getElementById("sellStockButton");
+        const tradeMessage = document.getElementById("tradeMessage");
+
+        function formatMoney(value) {
+            return Number(value).toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD"
+            });
+        }
+
+        function showMessage(message) {
+            tradeMessage.textContent = message;
+        }
+
+        function updateEstimates() {
+            const buyShares = Number(document.getElementById("buyShares").value);
+            const sellShares = Number(document.getElementById("sellShares").value);
+
+            document.getElementById("estimatedBuyCost").textContent =
+                formatMoney(buyShares > 0 ? buyShares * stockPrice : 0);
+
+            document.getElementById("estimatedSellProceeds").textContent =
+                formatMoney(sellShares > 0 ? sellShares * stockPrice : 0);
+        }
+
+        async function getJSON(url) {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Unable to load data");
+            }
+
+            return data;
+        }
+
+        async function loadTradePage() {
+            try {
+                // Load all available stocks to identify the selected stock.
+                const stocksData = await getJSON("/api/stocks");
+                const stocks = Array.isArray(stocksData)
+                    ? stocksData
+                    : stocksData.stocks || [];
+
+                const selectedStock = stocks.find(stock =>
+                    String(stock.stock_id) === String(requestedStockId)
+                );
+
+                if (!selectedStock) {
+                    showMessage("Stock not found.");
+                    document.getElementById("companyName").textContent =
+                        "Stock not found";
+                    return;
+                }
+
+                // Retrieve full details using the stock's ticker.
+                const detailsData = await getJSON(
+                    `/api/stocks/${encodeURIComponent(selectedStock.ticker)}`
+                );
+
+                const stock = detailsData.stock || detailsData;
+
+                stockId = Number(stock.stock_id);
+                stockPrice = Number(stock.current_price);
+
+                const ticker = stock.ticker || selectedStock.ticker;
+                const company = stock.company_name || selectedStock.company_name;
+
+                document.getElementById("companyName").textContent = company;
+                document.getElementById("stockTicker").textContent = ticker;
+
+                document.getElementById("currentPrice").textContent =
+                    formatMoney(stockPrice);
+
+                document.getElementById("detailCurrentPrice").textContent =
+                    formatMoney(stockPrice);
+
+                document.getElementById("openingPrice").textContent =
+                    formatMoney(stock.opening_price);
+
+                document.getElementById("dayHigh").textContent =
+                    formatMoney(stock.day_high);
+
+                document.getElementById("dayLow").textContent =
+                    formatMoney(stock.day_low);
+
+                const openingPrice = Number(stock.opening_price);
+                const dayChange = stockPrice - openingPrice;
+
+                document.getElementById("dayChange").textContent =
+                    (dayChange >= 0 ? "+" : "-") +
+                    formatMoney(Math.abs(dayChange));
+
+                // These fields are optional until added to the database.
+                if (stock.market_cap != null) {
+                    document.getElementById("marketCap").textContent =
+                        formatMoney(stock.market_cap);
+                }
+
+                if (stock.trading_volume != null) {
+                    document.getElementById("tradingVolume").textContent =
+                        Number(stock.trading_volume).toLocaleString();
+                }
+
+                if (stock.available_shares != null) {
+                    document.getElementById("availableShares").textContent =
+                        Number(stock.available_shares).toLocaleString();
+                }
+
+                document.getElementById("buyStockButton").textContent =
+                    `Buy ${ticker}`;
+
+                document.getElementById("sellStockButton").textContent =
+                    `Sell ${ticker}`;
+
+                // Load the logged-in user's account.
+                const account = await getJSON("/api/me");
+
+                cashAvailable = Number(account.cash_balance);
+                document.getElementById("cashBalance").textContent =
+                    formatMoney(cashAvailable);
+
+                // Load the user's portfolio.
+                const portfolio = await getJSON("/api/portfolio");
+                const holdings = portfolio.holdings || [];
+
+                const holding = holdings.find(item =>
+                    Number(item.stock_id) === stockId
+                );
+
+                ownedShares = holding ? Number(holding.share_num) : 0;
+
+                document.getElementById("sharesOwned").textContent =
+                    ownedShares;
+
+                document.getElementById("ownedForSale").textContent =
+                    ownedShares;
+
+                document.getElementById("holdingValue").textContent =
+                    formatMoney(ownedShares * stockPrice);
+
+                buyButton.disabled = false;
+                sellButton.disabled = ownedShares === 0;
+
+                updateEstimates();
+
+            } catch (error) {
+                console.error("Unable to load trade page:", error);
+                showMessage(error.message || "Unable to load stock information.");
+            }
+        }
+
+        async function submitTrade(type, shares, button) {
+            if (!Number.isInteger(shares) || shares <= 0) {
+                showMessage("Please enter a valid number of shares.");
+                return;
+            }
+
+            if (stockId === null) {
+                showMessage("No stock selected.");
+                return;
+            }
+
+            if (type === "buy" && shares * stockPrice > cashAvailable) {
+                showMessage("Insufficient funds for this purchase.");
+                return;
+            }
+
+            if (type === "sell" && shares > ownedShares) {
+                showMessage("You do not own enough shares.");
+                return;
+            }
+
+            buyButton.disabled = true;
+            sellButton.disabled = true;
+            showMessage("Processing trade...");
+
+            try {
+                const response = await fetch(`/api/${type}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        stock_id: stockId,
+                        shares: shares
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    showMessage(result.message || "Trade failed.");
+                    return;
+                }
+
+                window.location.href = "account.html";
+
+            } catch (error) {
+                console.error("Trade failed:", error);
+                showMessage("Unable to process trade.");
+
+            } finally {
+                buyButton.disabled = false;
+                sellButton.disabled = ownedShares === 0;
+            }
+        }
+
+        document.getElementById("buyShares").addEventListener(
+            "input", updateEstimates
+        );
+
+        document.getElementById("sellShares").addEventListener(
+            "input", updateEstimates
+        );
+
+        document.getElementById("buy").addEventListener(
+            "submit", function(event) {
+                event.preventDefault();
+
+                const shares = Number(
+                    document.getElementById("buyShares").value
+                );
+
+                submitTrade("buy", shares, buyButton);
+            }
+        );
+
+        document.getElementById("sell").addEventListener(
+            "submit", function(event) {
+                event.preventDefault();
+
+                const shares = Number(
+                    document.getElementById("sellShares").value
+                );
+
+                submitTrade("sell", shares, sellButton);
+            }
+        );
+
+        loadTradePage();
+    </script>
+</body>
 </html>

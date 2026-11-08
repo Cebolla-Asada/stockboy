@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +8,7 @@
     <title>Stockboy | Stocks</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
 <header class="site-header">
@@ -34,15 +36,13 @@
                         <th>Ticker</th>
                         <th>Company</th>
                         <th>Current Price</th>
-                        
-                        
-                      
                         <th>Action</th>
                     </tr>
                 </thead>
+
                 <tbody id="stockRows">
                     <tr>
-                        <td colspan="7">Loading stocks...</td>
+                        <td colspan="4">Loading stocks...</td>
                     </tr>
                 </tbody>
             </table>
@@ -82,8 +82,7 @@
                 const values = [
                     stock.ticker,
                     stock.company_name,
-                    formatPrice(stock.current_price)                 
-                  
+                    formatPrice(stock.current_price)
                 ];
 
                 for (const value of values) {
@@ -92,39 +91,57 @@
                     row.appendChild(cell);
                 }
 
+                // Action buttons
                 const actionCell = document.createElement("td");
-                const button = document.createElement("button");
 
-                button.textContent = "View Details";
-                button.className = "btn";
-                button.style.backgroundColor = "#2563eb";
-                button.style.color = "#ffffff";
-                button.style.padding = "10px 16px";
-               
-                 button.addEventListener("click", () => {
+                // View Details button
+                const detailsButton = document.createElement("button");
+                detailsButton.textContent = "View Details";
+                detailsButton.className = "btn";
+                detailsButton.type = "button";
+
+                detailsButton.addEventListener("click", () => {
                     loadStockDetails(stock.ticker);
                 });
 
-                actionCell.appendChild(button);
+                // Trade button
+                const tradeButton = document.createElement("a");
+                tradeButton.textContent = "Trade";
+                tradeButton.className = "btn buy";
+                tradeButton.href =
+                    `trade.html?stock=${stock.stock_id}#buy`;
+                tradeButton.style.marginLeft = "8px";
+
+                actionCell.appendChild(detailsButton);
+                actionCell.appendChild(tradeButton);
+
                 row.appendChild(actionCell);
                 stockRows.appendChild(row);
             }
 
+            // No stocks available
             if (data.stocks.length === 0) {
                 const row = document.createElement("tr");
                 const cell = document.createElement("td");
-                cell.colSpan = 7;
+
+                cell.colSpan = 4;
                 cell.textContent = "No stocks available.";
+
                 row.appendChild(cell);
                 stockRows.appendChild(row);
             }
 
         } catch (error) {
+            console.error("Error loading stocks:", error);
+
             stockRows.replaceChildren();
+
             const row = document.createElement("tr");
             const cell = document.createElement("td");
-            cell.colSpan = 7;
+
+            cell.colSpan = 4;
             cell.textContent = "Error loading stocks.";
+
             row.appendChild(cell);
             stockRows.appendChild(row);
         }
@@ -163,20 +180,42 @@
                 const strong = document.createElement("strong");
 
                 strong.textContent = label + ": ";
+
                 paragraph.appendChild(strong);
                 paragraph.appendChild(document.createTextNode(value));
+
                 stockInformation.appendChild(paragraph);
             }
 
+            // Trade button for the selected stock
+            const tradeLink = document.createElement("a");
+
+            tradeLink.textContent = `Trade ${stock.ticker}`;
+            tradeLink.className = "btn buy";
+            tradeLink.href =
+                `trade.html?stock=${stock.stock_id}#buy`;
+
+            stockInformation.appendChild(tradeLink);
+
+            // Scroll to stock details
+            stockDetails.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
         } catch (error) {
+            console.error("Error loading stock details:", error);
+
             stockInformation.textContent =
                 "Unable to retrieve stock details.";
         }
     }
 
+    // Load all stocks when the page opens
     loadStocks();
 </script>
 
 </body>
 </html>
+
 

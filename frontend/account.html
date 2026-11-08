@@ -1,73 +1,487 @@
-<!doctype html><html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stockboy | Account</title><link rel="stylesheet" href="styles.css"></head>
+<!doctype html>
+<html lang="en">
 
-    <body>
-        <header class="site-header"><a class="brand" href="index.html">Stockboy</a><nav class="nav"><a href="login.html">Home</a><a href="stocks.html">Stocks</a><a class="active" href="account.html">Account</a></nav>
-		
-		<a href="/api/logout">Logout</a>
-		</header>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stockboy | Account</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 
-        <main class="page"><div class="hero-row"><div><h1>Account Overview</h1><p class="subtitle">Manage your portfolio, cash, and transaction history.</p></div><div>
+<body>
 
-<!-- replaced placeholders for user account - bryan-->
+    <!-- Navigation -->
+    <header class="site-header">
 
-            <strong data-user-field="full_name">No user found...</strong><br>
-<span data-user-field="username"></span><br>
-<span data-user-field="email"></span>
-<!-- admin header - bryan -->
+        <a class="brand" href="index.html">Stockboy</a>
 
-<a
-    id="adminButton"
-    class="btn danger"
-    href="admin.html"
-    style="display: none; margin-top: 15px;"
->
-    ADMIN
-</a>
+        <nav class="nav">
+            <a href="login.html">Home</a>
+            <a href="stocks.html">Stocks</a>
+            <a class="active" href="account.html">Account</a>
+        </nav>
 
-        </div></div>
+        <a href="/api/logout">Logout</a>
 
+    </header>
+
+
+    <main class="page">
+
+        <!-- Account Header -->
+        <div class="hero-row">
+
+            <div>
+                <h1>Account Overview</h1>
+                <p class="subtitle">
+                    Manage your portfolio, cash, and transaction history.
+                </p>
+            </div>
+
+            <div>
+
+                <strong data-user-field="full_name">
+                    Loading account...
+                </strong>
+                <br>
+
+                <span data-user-field="username"></span>
+                <br>
+
+                <span data-user-field="email"></span>
+
+                <!-- Admin Button -->
+                <br>
+
+                <a
+                    id="adminButton"
+                    class="btn danger"
+                    href="admin.html"
+                    style="display: none; margin-top: 15px;"
+                >
+                    ADMIN
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- Cash Account and Account Summary -->
         <div class="grid-2 top-gap">
-        <section class="card"><h2>Cash Account</h2><div class="form-body"><div class="balance" data-user-field="cash_balance">{{CASH_BALANCE}}</div><div class="btn-row top-gap"><a class="btn" id="depositCashLink" href="cash.html#deposit">Deposit Cash</a><a class="btn secondary" id="withdrawCashLink" href="cash.html#withdraw">Withdraw Cash</a></div></div></section>
 
-        <section class="card"><h2>Account Summary</h2><div class="form-body"><div class="summary-row"><span>Total Portfolio Value</span><strong>{{PORTFOLIO_VALUE}}</strong></div><div class="summary-row"><span>Cash Balance</span><strong>{{CASH_BALANCE}}</strong></div><div class="summary-row"><span>Total Account Value</span><strong>{{ACCOUNT_VALUE}}</strong></div></div></section></div>
+            <!-- Cash Account -->
+            <section class="card">
 
-        <section class="card top-gap"><h2>Your Portfolio</h2><div class="table-wrap"><table><thead><tr><th>Ticker</th><th>Company</th><th>Shares Owned</th><th>Current Price</th><th>Market Value</th><th>Day Change</th><th>Actions</th></tr></thead><tbody id="portfolioRows"><tr data-stock-id="{{STOCK_ID}}"><td>{{TICKER}}</td><td>{{COMPANY_NAME}}</td><td>{{SHARES_OWNED}}</td><td>{{CURRENT_PRICE}}</td><td>{{MARKET_VALUE}}</td><td>{{DAY_CHANGE}}</td><td><a class="btn buy" href="trade.html?stock={{STOCK_ID}}#buy">Buy</a> <a class="btn sell" href="trade.html?stock={{STOCK_ID}}#sell">Sell</a></td></tr></tbody></table></div></section>
+                <h2>Cash Account</h2>
 
-        <section class="card top-gap"><h2>Transaction History</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Total Amount</th><th>Status</th></tr></thead><tbody id="transactionRows"><tr><td>{{DATE}}</td><td>{{TYPE}}</td><td>{{TICKER}}</td><td>{{SHARES}}</td><td>{{PRICE}}</td><td>{{TOTAL}}</td><td>{{STATUS}}</td></tr></tbody></table></div></section>
-            </main>
+                <div class="form-body">
+
+                    <div class="balance" id="cashBalance">
+                        $0.00
+                    </div>
+
+                    <div class="btn-row top-gap">
+
+                        <a
+                            class="btn"
+                            id="depositCashLink"
+                            href="cash.html#deposit"
+                        >
+                            Deposit Cash
+                        </a>
+
+                        <a
+                            class="btn secondary"
+                            id="withdrawCashLink"
+                            href="cash.html#withdraw"
+                        >
+                            Withdraw Cash
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </section>
 
 
+            <!-- Account Summary -->
+            <section class="card">
+
+                <h2>Account Summary</h2>
+
+                <div class="form-body">
+
+                    <div class="summary-row">
+                        <span>Total Portfolio Value</span>
+                        <strong id="portfolioValue">$0.00</strong>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Cash Balance</span>
+                        <strong id="summaryCash">$0.00</strong>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Total Account Value</span>
+                        <strong id="accountValue">$0.00</strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
 
 
-    <!--script needed for account info - bryan -->
-<script>
-fetch("/api/me")
-    .then(response => {
-        if (response.status === 401) {
-            window.location.href = "login.html";
-            return;
+        <!-- Portfolio -->
+        <section class="card top-gap">
+
+            <h2>Your Portfolio</h2>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Company</th>
+                            <th>Shares Owned</th>
+                            <th>Current Price</th>
+                            <th>Market Value</th>
+                            <th>Day Change</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="portfolioRows">
+
+                        <tr>
+                            <td colspan="7">Loading portfolio...</td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- Transaction History -->
+        <section class="card top-gap">
+
+            <h2>Transaction History</h2>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Ticker</th>
+                            <th>Shares</th>
+                            <th>Price</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="transactionRows">
+
+                        <tr>
+                            <td colspan="7">
+                                Loading transaction history...
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Account JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script>
+
+        // Format numbers as dollars
+        function formatMoney(amount) {
+            return "$" + Number(amount).toFixed(2);
         }
 
-        return response.json();
-    })
-    .then(user => {
-    if (!user) return;
 
-    document.querySelector('[data-user-field="full_name"]').textContent =
-        user.full_name;
+        // Button text constants for localization or easy updates
+        const BUY_BUTTON_TEXT = "Buy";
+        const SELL_BUTTON_TEXT = "Sell";
 
-    document.querySelector('[data-user-field="username"]').textContent =
-        "@" + user.username;
+        // Load account information and portfolio
+        async function loadAccount() {
 
-    document.querySelector('[data-user-field="email"]').textContent =
-        user.email;
+            try {
 
-    if (user.role === "admin") {
-        document.getElementById("adminButton").style.display = "inline-block";
-    }
-});
-</script>
+                // Get logged-in user information
+                const userResponse = await fetch("/api/me");
 
-        </body>
-    </html>
+                if (userResponse.status === 401) {
+                    window.location.href = "login.html";
+                    return;
+                }
+
+                if (!userResponse.ok) {
+                    throw new Error("Unable to retrieve account information.");
+                }
+
+                const user = await userResponse.json();
+
+
+                // Display user information
+                document.querySelector(
+                    '[data-user-field="full_name"]'
+                ).textContent = user.full_name || "Account Holder";
+
+                document.querySelector(
+                    '[data-user-field="username"]'
+                ).textContent = user.username ? "@" + user.username : "";
+
+                document.querySelector(
+                    '[data-user-field="email"]'
+                ).textContent = user.email || "No email on file";
+
+
+                // Show admin button for administrators
+                if (user.role === "admin") {
+
+                    document.getElementById("adminButton").style.display =
+                        "inline-block";
+
+                }
+
+
+                // Display cash balance
+                const cashBalance = Number(user.cash_balance ?? 0);
+
+                document.getElementById("cashBalance").textContent =
+                    formatMoney(cashBalance);
+
+                document.getElementById("summaryCash").textContent =
+                    formatMoney(cashBalance);
+
+
+                // Retrieve portfolio information
+                const portfolioResponse = await fetch("/api/portfolio");
+
+                if (!portfolioResponse.ok) {
+                    throw new Error("Unable to retrieve portfolio.");
+                }
+
+                const portfolio = await portfolioResponse.json();
+
+                const holdings = portfolio.holdings || [];
+
+                const portfolioValue = Number(
+                    portfolio.total_portfolio_value || 0
+                );
+
+
+                // Calculate total account value
+                const accountValue = cashBalance + portfolioValue;
+
+                document.getElementById("portfolioValue").textContent =
+                    formatMoney(portfolioValue);
+
+                document.getElementById("accountValue").textContent =
+                    formatMoney(accountValue);
+
+
+                // Populate portfolio table
+                const portfolioRows =
+                    document.getElementById("portfolioRows");
+
+                portfolioRows.innerHTML = "";
+
+
+                if (holdings.length === 0) {
+
+                    portfolioRows.innerHTML = `
+                        <tr>
+                            <td colspan="7">
+                                You do not currently own any stocks.
+                            </td>
+                        </tr>
+                    `;
+
+                } else {
+
+                    holdings.forEach(stock => {
+
+                        const currentPrice = Number(stock.current_price);
+
+                        const openingPrice = Number(
+                            stock.opening_price || currentPrice
+                        );
+
+                        const dayChange = currentPrice - openingPrice;
+
+                        const row = document.createElement("tr");
+
+                        // Determine class for day change
+                        let dayChangeClass = "";
+                        if (dayChange > 0) {
+                            dayChangeClass = "day-positive";
+                        } else if (dayChange < 0) {
+                            dayChangeClass = "day-negative";
+                        } else {
+                            dayChangeClass = "day-neutral";
+                        }
+
+                        // Add sign for positive/negative
+                        let dayChangeDisplay = (dayChange > 0 ? "+" : "") + formatMoney(dayChange);
+
+                        row.innerHTML = `
+                            <td>${stock.ticker}</td>
+
+                            <td>${stock.company_name}</td>
+
+                            <td>${stock.share_num}</td>
+
+                            <td>${formatMoney(currentPrice)}</td>
+
+                            <td>${formatMoney(stock.holding_value)}</td>
+
+                            <td class="${dayChangeClass}">${dayChangeDisplay}</td>
+
+                            <td>
+                                <a
+                                    class="btn buy"
+                                    href="trade.html?stock=${stock.stock_id ?? ''}#buy"
+                                >
+                                    ${BUY_BUTTON_TEXT}
+                                </a>
+
+                                <a
+                                    class="btn sell"
+                                    href="trade.html?stock=${stock.stock_id}#sell"
+                                >
+                                    ${SELL_BUTTON_TEXT}
+                                </a>
+                            </td>
+                        `;
+
+                        portfolioRows.appendChild(row);
+                    });
+                }
+
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        // Capitalize status string
+        function capitalizeStatus(status) {
+            if (!status) return "Completed";
+            return status.charAt(0).toUpperCase() + status.slice(1);
+        }
+
+        // Load transaction history
+        async function loadTransactions() {
+
+            const transactionRows =
+                document.getElementById("transactionRows");
+
+            try {
+
+                // Request transaction history from Flask
+                const response = await fetch("/api/transactions");
+
+                if (!response.ok) {
+                    throw new Error("Unable to retrieve transactions.");
+                }
+
+                const data = await response.json();
+
+                const transactions = data.transactions || [];
+
+                transactionRows.innerHTML = "";
+
+
+                // Display message if there are no transactions
+                if (transactions.length === 0) {
+
+                    transactionRows.innerHTML = `
+                        <tr>
+                            <td colspan="7">
+                                You have no transaction history yet.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                transactions.forEach((transaction) => {
+                    let dateStr = transaction.transaction_date || "";
+                    if (dateStr.includes(" ") && !dateStr.includes("T")) {
+                        dateStr = dateStr.replace(" ", "T");
+                    }
+
+                    const date = new Date(dateStr);
+                    const formattedDate = isNaN(date.getTime())
+                        ? transaction.transaction_date
+                        : date.toLocaleString();
+                    const row = document.createElement("tr");
+
+                    row.innerHTML = `
+                        <td>${formattedDate}</td>
+                        <td>${transaction.transaction_type}</td>
+                        <td>${transaction.ticker}</td>
+                        <td>${transaction.share_num}</td>
+                        <td>${formatMoney(transaction.price ?? 0)}</td>
+                        <td>${formatMoney(transaction.total_amount ?? 0)}</td>
+                        <td>${capitalizeStatus(transaction.status)}</td>
+                    `;
+
+                    transactionRows.appendChild(row);
+                });
+
+            } catch (error) {
+
+                console.error("Transaction history error:", error);
+
+                transactionRows.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            Unable to load transaction history.
+                        </td>
+                    </tr>
+                `;
+
+            }
+
+        }
+
+
+        (async () => {
+            try {
+                await Promise.all([
+                    loadAccount(),
+                    loadTransactions()
+                ]);
+            } catch (error) {
+                console.error("Error loading account or transactions:", error);
+            }
+        })();
+
+    </script>
+
+</body>
+
+</html>

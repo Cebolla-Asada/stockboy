@@ -1,59 +1,330 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stockboy | Admin</title><link rel="stylesheet" href="styles.css"></head>
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stockboy | Admin</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 
 <body>
 
-<!--admin check -bryan -->
+    <!-- Admin access message -->
+    <div id="adminAccessMessage"
+         class="panel center"
+         style="display:none; margin:40px auto; max-width:600px;">
+        <h1>You are not an admin!</h1>
+        <p class="subtitle">Redirecting you...</p>
+    </div>
 
-<div id="adminAccessMessage" class="panel center" style="display:none; margin:40px auto; max-width:600px;">
-    <h1>You are not an admin!</h1>
-    <p class="subtitle">Redirecting you...</p>
-</div>
+    <!-- Admin content is hidden until access is verified -->
+    <div id="adminContent" style="display:none;">
 
-<div id="adminContent" style="display:none;">
+        <header class="site-header">
+            <a class="brand" href="index.html">Stockboy</a>
+            <nav class="nav">
+                <a href="index.html">Home</a>
+                <a href="stocks.html">Stocks</a>
+                <a href="account.html">Account</a>
+            </nav>
+        </header>
 
-<!--end-bryan-->
+        <main class="page">
+            <h1>Admin Dashboard</h1>
+            <p class="subtitle">
+                Manage stocks and market availability.
+            </p>
 
+            <div class="grid-2 top-gap">
 
-    <header class="site-header"><a class="brand" href="index.html">Stockboy</a><nav class="nav"><a href="index.html">Home</a><a href="stocks.html">Stocks</a><a href="account.html">Account</a></nav></header>
-    <main class="page"><h1>Admin Dashboard</h1><p class="subtitle">Manage stocks and market availability.</p><div class="grid-2 top-gap">
-        <form class="card" id="createStockForm" name="createStockForm" method="post" action="/api/admin/stocks"><h2>Create New Stock</h2><div class="form-body"><div class="field"><label for="ticker">Ticker Symbol</label><input id="ticker" name="ticker" required></div><div class="field"><label for="company">Company Name</label><input id="company" name="company_name" required></div><div class="field"><label for="shares">Shares Available / Volume</label><input id="shares" name="volume" type="number" min="1" required></div><div class="field"><label for="price">Initial Price</label><input id="price" name="initial_price" type="number" min="0.01" step="0.01" required></div>
-        <button class="btn wide" id="createStockButton" name="createStockButton" type="submit">Create Stock</button></div></form>
-        <form class="card" id="marketHoursForm" name="marketHoursForm" method="post" action="/api/admin/market-hours"><h2>Market Hours & Days</h2><div class="form-body"><div class="field"><label for="openTime">Market Open</label><input id="openTime" name="open_time" type="time" required></div><div class="field"><label for="closeTime">Market Close</label><input id="closeTime" name="close_time" type="time" required></div><strong>Trading Days</strong><div class="check-grid top-gap"><label><input type="checkbox" name="days" value="monday"> Monday</label><label><input type="checkbox" name="days" value="tuesday"> Tuesday</label><label><input type="checkbox" name="days" value="wednesday"> Wednesday</label><label><input type="checkbox" name="days" value="thursday"> Thursday</label><label><input type="checkbox" name="days" value="friday"> Friday</label><label><input type="checkbox" name="days" value="saturday"> Saturday</label><label><input type="checkbox" name="days" value="sunday"> Sunday</label></div><div class="field top-gap"><label for="holiday">Closed Holiday / Date</label><input id="holiday" name="holiday" type="date"></div><button class="btn wide" id="saveMarketScheduleButton" name="saveMarketScheduleButton" type="submit">Save Market Hours & Schedule</button></div></form></div>
-        <section class="card top-gap"><h2>Existing Stocks</h2><div class="table-wrap"><table><thead><tr><th>Ticker</th><th>Company</th><th>Shares Available</th><th>Current Price</th><th>Actions</th></tr></thead><tbody id="adminStockRows"><tr><td>{{TICKER}}</td><td>{{COMPANY_NAME}}</td><td>{{AVAILABLE_SHARES}}</td><td>{{CURRENT_PRICE}}</td><td><button class="btn secondary" type="button" name="editStockButton" data-stock-id="{{STOCK_ID}}">Edit</button> <button class="btn danger" type="button" name="deleteStockButton" data-stock-id="{{STOCK_ID}}">Delete</button></td></tr></tbody></table></div></section>
+                <!-- Create Stock -->
+                <form class="card" id="createStockForm">
+                    <h2>Create New Stock</h2>
+
+                    <div class="form-body">
+                        <div class="field">
+                            <label for="ticker">Ticker Symbol</label>
+                            <input id="ticker" name="ticker" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="company">Company Name</label>
+                            <input id="company" name="company_name" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="shares">Shares Available / Volume</label>
+                            <input id="shares" name="available_shares"
+                                   type="number" min="1" step="1" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="price">Initial Price</label>
+                            <input id="price" name="initial_price"
+                                   type="number" min="0.01" step="0.01" required>
+                        </div>
+
+                        <button class="btn wide"
+                                id="createStockButton"
+                                type="submit">
+                            Create Stock
+                        </button>
+
+                        <p id="createStockMessage" role="status"></p>
+                    </div>
+                </form>
+
+                <!-- Market Hours -->
+                <form class="card" id="marketHoursForm">
+                    <h2>Market Hours & Days</h2>
+
+                    <div class="form-body">
+                        <div class="field">
+                            <label for="openTime">Market Open</label>
+                            <input id="openTime" name="open_time"
+                                   type="time" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="closeTime">Market Close</label>
+                            <input id="closeTime" name="close_time"
+                                   type="time" required>
+                        </div>
+
+                        <strong>Trading Days</strong>
+
+                        <div class="check-grid top-gap">
+                            <label><input type="checkbox" name="days" value="monday"> Monday</label>
+                            <label><input type="checkbox" name="days" value="tuesday"> Tuesday</label>
+                            <label><input type="checkbox" name="days" value="wednesday"> Wednesday</label>
+                            <label><input type="checkbox" name="days" value="thursday"> Thursday</label>
+                            <label><input type="checkbox" name="days" value="friday"> Friday</label>
+                            <label><input type="checkbox" name="days" value="saturday"> Saturday</label>
+                            <label><input type="checkbox" name="days" value="sunday"> Sunday</label>
+                        </div>
+
+                        <div class="field top-gap">
+                            <label for="holiday">Closed Holiday / Date</label>
+                            <input id="holiday" name="holiday" type="date">
+                        </div>
+
+                        <button class="btn wide"
+                                id="saveMarketScheduleButton"
+                                type="submit"
+                                disabled>
+                            Save Market Hours & Schedule
+                        </button>
+
+                        <p class="muted">
+                            Market schedule management coming soon.
+                        </p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Existing Stocks -->
+            <section class="card top-gap">
+                <h2>Existing Stocks</h2>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Company</th>
+                                <th>Shares Available</th>
+                                <th>Current Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="adminStockRows">
+                            <tr>
+                                <td colspan="5">Loading stocks...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
-</div>
+    </div>
 
-<!--admin check script -bryan-->
-<script>
-fetch("/api/me")
-    .then(response => {
-        if (response.status === 401) {
-            document.getElementById("adminAccessMessage").style.display = "block";
+    <script>
+        const adminContent = document.getElementById("adminContent");
+        const adminAccessMessage = document.getElementById("adminAccessMessage");
+        const createStockForm = document.getElementById("createStockForm");
+        const createStockButton = document.getElementById("createStockButton");
+        const createStockMessage = document.getElementById("createStockMessage");
+        const adminStockRows = document.getElementById("adminStockRows");
 
-            setTimeout(() => {
-                window.location.href = "login.html";
-            }, 2000);
-
-            return;
+        function formatMoney(value) {
+            return Number(value).toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD"
+            });
         }
 
-        return response.json();
-    })
-    .then(user => {
-        if (!user) return;
+        // Verify that the logged-in user is an administrator
+        async function checkAdminAccess() {
+            try {
+                const response = await fetch("/api/me");
 
-        if (user.role === "admin") {
-            document.getElementById("adminContent").style.display = "block";
-        } else {
-            document.getElementById("adminAccessMessage").style.display = "block";
+                if (response.status === 401) {
+                    adminAccessMessage.style.display = "block";
 
-            setTimeout(() => {
-                window.location.href = "index.html";
-            }, 2000);
+                    setTimeout(() => {
+                        window.location.href = "login.html";
+                    }, 2000);
+
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error("Unable to verify account");
+                }
+
+                const user = await response.json();
+
+                if (user.role === "admin") {
+                    adminContent.style.display = "block";
+                    loadAdminStocks();
+                } else {
+                    adminAccessMessage.style.display = "block";
+
+                    setTimeout(() => {
+                        window.location.href = "index.html";
+                    }, 2000);
+                }
+
+            } catch (error) {
+                console.error("Admin access check failed:", error);
+
+                adminAccessMessage.style.display = "block";
+                adminAccessMessage.querySelector("h1").textContent =
+                    "Unable to verify administrator access.";
+            }
         }
-    });
-</script>
-<!--end-->
+
+        // Retrieve and display existing stocks
+        async function loadAdminStocks() {
+            try {
+                const response = await fetch("/api/stocks");
+
+                if (!response.ok) {
+                    throw new Error("Unable to load stocks");
+                }
+
+                const data = await response.json();
+                adminStockRows.replaceChildren();
+
+                for (const stock of data.stocks) {
+                    const row = document.createElement("tr");
+
+                    const values = [
+                        stock.ticker,
+                        stock.company_name,
+                        Number(stock.available_shares).toLocaleString(),
+                        formatMoney(stock.current_price)
+                    ];
+
+                    for (const value of values) {
+                        const cell = document.createElement("td");
+                        cell.textContent = value;
+                        row.appendChild(cell);
+                    }
+
+                    // Edit and Delete are not implemented yet
+                    const actions = document.createElement("td");
+
+                    const editButton = document.createElement("button");
+                    editButton.className = "btn secondary";
+                    editButton.textContent = "Edit";
+                    editButton.type = "button";
+                    editButton.disabled = true;
+
+                    const deleteButton = document.createElement("button");
+                    deleteButton.className = "btn danger";
+                    deleteButton.textContent = "Delete";
+                    deleteButton.type = "button";
+                    deleteButton.disabled = true;
+                    deleteButton.style.marginLeft = "8px";
+
+                    actions.appendChild(editButton);
+                    actions.appendChild(deleteButton);
+
+                    row.appendChild(actions);
+                    adminStockRows.appendChild(row);
+                }
+
+                if (data.stocks.length === 0) {
+                    adminStockRows.innerHTML =
+                        '<tr><td colspan="5">No stocks available.</td></tr>';
+                }
+
+            } catch (error) {
+                console.error("Unable to load stocks:", error);
+
+                adminStockRows.innerHTML =
+                    '<tr><td colspan="5">Unable to load stocks.</td></tr>';
+            }
+        }
+
+        // Submit a new stock to Flask
+        createStockForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const ticker = document.getElementById("ticker").value.trim();
+            const companyName = document.getElementById("company").value.trim();
+            const availableShares = Number(
+                document.getElementById("shares").value
+            );
+            const initialPrice = document.getElementById("price").value;
+
+            createStockButton.disabled = true;
+            createStockMessage.textContent = "Creating stock...";
+
+            try {
+                const response = await fetch("/api/admin/stocks", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        ticker: ticker,
+                        company_name: companyName,
+                        available_shares: availableShares,
+                        initial_price: initialPrice
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    createStockMessage.textContent =
+                        result.message || "Unable to create stock.";
+                    return;
+                }
+
+                createStockMessage.textContent = result.message;
+                createStockForm.reset();
+
+                // Refresh the stocks table
+                await loadAdminStocks();
+
+            } catch (error) {
+                console.error("Unable to create stock:", error);
+                createStockMessage.textContent =
+                    "Unable to create stock.";
+
+            } finally {
+                createStockButton.disabled = false;
+            }
+        });
+
+        // Start by checking administrator access
+        checkAdminAccess();
+    </script>
 
 </body>
 </html>
