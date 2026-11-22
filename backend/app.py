@@ -2,6 +2,8 @@ from flask import Flask, send_from_directory, request, redirect, session
 from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector
 import os
+from price_generator import generate_random_price, start_price_generator, is_market_open
+from order_processor import start_order_processor
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -435,21 +437,22 @@ def get_transactions():
 
         if connection is not None and connection.is_connected():
             connection.close()
-
-## Buy stock route
-@app.route("/api/buy", methods=["POST"])
-def buy_stock():
-
+def create_pending_order(order_type):
     if "user_id" not in session:
         return {"status": "error", "message": "Please log in first"}, 401
+
+    if not is_market_open():
+        return {"status": "error", "message": "The market is currently closed."}, 403
 
     data = request.get_json(silent=True) or {}
 
     try:
         stock_id = int(data.get("stock_id"))
         shares = int(data.get("shares"))
+
         if stock_id <= 0 or shares <= 0:
             raise ValueError()
+
     except (TypeError, ValueError):
         return {"status": "error", "message": "Invalid stock or share amount"}, 400
 
@@ -470,114 +473,7 @@ def buy_stock():
         user = cursor.fetchone()
 
         if not user:
-            connection.rollback()
             return {"status": "error", "message": "User not found"}, 404
-
-        cursor.execute(
-            "SELECT stock_id, current_price FROM stocks WHERE stock_id = %s",
-            (stock_id,)
-        )
-        stock = cursor.fetchone()
-
-        if not stock:
-            connection.rollback()
-            return {"status": "error", "message": "Stock not found"}, 404
-
-        price = stock["current_price"]
-        total = price * shares
-
-        if user["cash_balance"] < total:
-            connection.rollback()
-            return {"status": "error", "message": "Insufficient funds"}, 400
-
-        cursor.execute("""
-            UPDATE users
-            SET cash_balance = cash_balance - %s
-            WHERE user_id = %s
-        """, (total, user_id))
-
-        cursor.execute("""
-            INSERT INTO holdings (user_id, stock_id, share_num)
-            VALUES (%s, %s, %s)
-            ON DUPLICATE KEY UPDATE share_num = share_num + %s
-        """, (user_id, stock_id, shares, shares))
-
-        cursor.execute("""
-            INSERT INTO transactions
-                (user_id, stock_id, transaction_type,
-                 share_num, price, total_amount)
-            VALUES (%s, %s, 'BUY', %s, %s, %s)
-        """, (user_id, stock_id, shares, price, total))
-
-        connection.commit()
-
-        return {
-            "status": "success",
-            "message": f"Successfully purchased {shares} shares",
-            "total": float(total)
-        }
-
-    except Exception:
-        if connection is not None:
-            connection.rollback()
-        app.logger.exception("Failed to buy stock")
-        return {"status": "error", "message": "Unable to complete purchase"}, 500
-
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if connection is not None and connection.is_connected():
-            connection.close()
-
-##Sell stock route
-@app.route("/api/sell", methods=["POST"])
-def sell_stock():
-
-    if "user_id" not in session:
-        return {"status": "error", "message": "Please log in first"}, 401
-
-    data = request.get_json(silent=True) or {}
-
-    try:
-        stock_id = int(data.get("stock_id"))
-        shares = int(data.get("shares"))
-        if stock_id <= 0 or shares <= 0:
-            raise ValueError()
-    except (TypeError, ValueError):
-        return {"status": "error", "message": "Invalid stock or share amount"}, 400
-
-    connection = None
-    cursor = None
-
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor(dictionary=True)
-        connection.start_transaction()
-
-        user_id = session["user_id"]
-
-        cursor.execute(
-            "SELECT cash_balance FROM users WHERE user_id = %s FOR UPDATE",
-            (user_id,)
-        )
-        user = cursor.fetchone()
-
-        if not user:
-            connection.rollback()
-            return {"status": "error", "message": "User not found"}, 404
-
-        cursor.execute("""
-            SELECT share_num
-            FROM holdings
-            WHERE user_id = %s AND stock_id = %s
-            FOR UPDATE
-        """, (user_id, stock_id))
-
-        holding = cursor.fetchone()
-
-        if not holding or holding["share_num"] < shares:
-            connection.rollback()
-            return {"status": "error", "message": "Not enough shares to sell"}, 400
 
         cursor.execute(
             "SELECT current_price FROM stocks WHERE stock_id = %s",
@@ -586,56 +482,62 @@ def sell_stock():
         stock = cursor.fetchone()
 
         if not stock:
-            connection.rollback()
             return {"status": "error", "message": "Stock not found"}, 404
 
-        price = stock["current_price"]
-        total = price * shares
+        if order_type == "BUY":
+            total = stock["current_price"] * shares
+
+            if user["cash_balance"] < total:
+                return {"status": "error", "message": "Insufficient funds"}, 400
+
+        else:
+            cursor.execute(
+                "SELECT share_num FROM holdings WHERE user_id = %s AND stock_id = %s",
+                (user_id, stock_id)
+            )
+            holding = cursor.fetchone()
+
+            if not holding or holding["share_num"] < shares:
+                return {"status": "error", "message": "Not enough shares to sell"}, 400
 
         cursor.execute("""
-            UPDATE holdings
-            SET share_num = share_num - %s
-            WHERE user_id = %s AND stock_id = %s
-        """, (shares, user_id, stock_id))
+            INSERT INTO orders
+                (user_id, stock_id, order_type, share_num, status, execute_at)
+            VALUES
+                (%s, %s, %s, %s, 'PENDING',
+                 DATE_ADD(NOW(), INTERVAL 30 SECOND))
+        """, (user_id, stock_id, order_type, shares))
 
-        cursor.execute("""
-            DELETE FROM holdings
-            WHERE user_id = %s AND stock_id = %s AND share_num = 0
-        """, (user_id, stock_id))
-
-        cursor.execute("""
-            UPDATE users
-            SET cash_balance = cash_balance + %s
-            WHERE user_id = %s
-        """, (total, user_id))
-
-        cursor.execute("""
-            INSERT INTO transactions
-                (user_id, stock_id, transaction_type,
-                 share_num, price, total_amount)
-            VALUES (%s, %s, 'SELL', %s, %s, %s)
-        """, (user_id, stock_id, shares, price, total))
-
+        order_id = cursor.lastrowid
         connection.commit()
 
         return {
             "status": "success",
-            "message": f"Successfully sold {shares} shares",
-            "total": float(total)
+            "message": "Order pending. You can cancel before execution.",
+            "order_id": order_id,
+            "order_status": "PENDING"
         }
 
     except Exception:
-        if connection is not None:
-            connection.rollback()
-        app.logger.exception("Failed to sell stock")
-        return {"status": "error", "message": "Unable to complete sale"}, 500
+        app.logger.exception("Failed to create pending order")
+        return {"status": "error", "message": "Unable to create order"}, 500
 
     finally:
         if cursor is not None:
             cursor.close()
+
         if connection is not None and connection.is_connected():
+            connection.rollback()
             connection.close()
 
+## Buy stock route
+@app.route("/api/buy", methods=["POST"])
+def buy_stock():
+    return create_pending_order("BUY")
+##Sell stock route
+@app.route("/api/sell", methods=["POST"])
+def sell_stock():
+    return create_pending_order("SELL")
 ##Deposit Cash Route
 from decimal import Decimal, InvalidOperation
 
@@ -812,6 +714,293 @@ def admin_create_stock():
             connection.close()
 
 
+
+def update_stock_prices():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            "SELECT stock_id, current_price FROM stocks"
+        )
+        stocks = cursor.fetchall()
+
+        for stock in stocks:
+            new_price = generate_random_price(
+                stock["current_price"]
+            )
+
+            cursor.execute(
+    """
+    UPDATE stocks
+    SET current_price = %s,
+        day_high = GREATEST(COALESCE(day_high, %s), %s),
+        day_low = LEAST(COALESCE(day_low, %s), %s)
+    WHERE stock_id = %s
+    """,
+    (new_price, new_price, new_price,
+     new_price, new_price, stock["stock_id"])
+)
+        connection.commit()
+        print("Stock prices updated!")
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.route("/api/market-status", methods=["GET"])
+def market_status():
+    return {"market_open": is_market_open()}
+
+def process_pending_orders():
+    if not is_market_open():
+        return
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        connection.start_transaction()
+
+        cursor.execute("""
+            SELECT *
+            FROM orders
+            WHERE status = 'PENDING'
+            AND execute_at <= NOW()
+            ORDER BY order_id
+            LIMIT 1
+            FOR UPDATE
+        """)
+
+        order = cursor.fetchone()
+
+        if not order:
+            connection.rollback()
+            return
+
+        order_id = order["order_id"]
+        user_id = order["user_id"]
+        stock_id = order["stock_id"]
+        shares = order["share_num"]
+        order_type = order["order_type"]
+
+        cursor.execute(
+            "SELECT cash_balance FROM users WHERE user_id = %s FOR UPDATE",
+            (user_id,)
+        )
+        user = cursor.fetchone()
+
+        cursor.execute(
+            "SELECT current_price FROM stocks WHERE stock_id = %s FOR UPDATE",
+            (stock_id,)
+        )
+        stock = cursor.fetchone()
+
+        price = stock["current_price"]
+        total = price * shares
+
+        if order_type == "BUY":
+
+            if user["cash_balance"] < total:
+                cursor.execute("""
+                    UPDATE orders SET status = 'CANCELLED'
+                    WHERE order_id = %s
+                """, (order_id,))
+                connection.commit()
+                return
+
+            cursor.execute("""
+                UPDATE users
+                SET cash_balance = cash_balance - %s
+                WHERE user_id = %s
+            """, (total, user_id))
+
+            cursor.execute("""
+                INSERT INTO holdings
+                    (user_id, stock_id, share_num)
+                VALUES (%s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    share_num = share_num + %s
+            """, (user_id, stock_id, shares, shares))
+
+        else:
+
+            cursor.execute("""
+                SELECT share_num FROM holdings
+                WHERE user_id = %s AND stock_id = %s
+                FOR UPDATE
+            """, (user_id, stock_id))
+
+            holding = cursor.fetchone()
+
+            if not holding or holding["share_num"] < shares:
+                cursor.execute("""
+                    UPDATE orders SET status = 'CANCELLED'
+                    WHERE order_id = %s
+                """, (order_id,))
+                connection.commit()
+                return
+
+            cursor.execute("""
+                UPDATE holdings
+                SET share_num = share_num - %s
+                WHERE user_id = %s AND stock_id = %s
+            """, (shares, user_id, stock_id))
+
+            cursor.execute("""
+                DELETE FROM holdings
+                WHERE user_id = %s AND stock_id = %s
+                AND share_num = 0
+            """, (user_id, stock_id))
+
+            cursor.execute("""
+                UPDATE users
+                SET cash_balance = cash_balance + %s
+                WHERE user_id = %s
+            """, (total, user_id))
+
+        cursor.execute("""
+            INSERT INTO transactions
+                (user_id, stock_id, transaction_type,
+                 share_num, price, total_amount)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (user_id, stock_id, order_type,
+              shares, price, total))
+
+        cursor.execute("""
+            UPDATE orders
+            SET status = 'COMPLETED'
+            WHERE order_id = %s
+        """, (order_id,))
+
+        connection.commit()
+        print(f"Order {order_id} completed")
+
+    except Exception:
+        if connection is not None:
+            connection.rollback()
+
+        app.logger.exception("Failed to process pending order")
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if connection is not None and connection.is_connected():
+            connection.close()
+@app.route("/api/orders/<int:order_id>/cancel", methods=["POST"])
+def cancel_order(order_id):
+    if "user_id" not in session:
+        return {"status": "error", "message": "Please log in first"}, 401
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        connection.start_transaction()
+
+        cursor.execute("""
+            UPDATE orders
+            SET status = 'CANCELLED'
+            WHERE order_id = %s
+            AND user_id = %s
+            AND status = 'PENDING'
+        """, (order_id, session["user_id"]))
+
+        if cursor.rowcount == 0:
+            connection.rollback()
+            return {
+                "status": "error",
+                "message": "Order cannot be cancelled"
+            }, 400
+
+        connection.commit()
+
+        return {
+            "status": "success",
+            "message": "Order cancelled successfully"
+        }
+
+    except Exception:
+        if connection is not None:
+            connection.rollback()
+
+        app.logger.exception("Failed to cancel order")
+
+        return {
+            "status": "error",
+            "message": "Unable to cancel order"
+        }, 500
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if connection is not None and connection.is_connected():
+            connection.close()
+@app.route("/api/orders", methods=["GET"])
+def get_orders():
+    if "user_id" not in session:
+        return {"status": "error", "message": "Please log in first"}, 401
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                orders.order_id,
+                orders.stock_id,
+                stocks.ticker,
+                stocks.company_name,
+                orders.order_type,
+                orders.share_num,
+                orders.status,
+                orders.created_at,
+                orders.execute_at
+            FROM orders
+            JOIN stocks
+                ON orders.stock_id = stocks.stock_id
+            WHERE orders.user_id = %s
+            ORDER BY orders.order_id DESC
+        """, (session["user_id"],))
+
+        orders = cursor.fetchall()
+
+        return {
+            "status": "success",
+            "orders": orders
+        }
+
+    except Exception:
+        app.logger.exception("Failed to retrieve orders")
+
+        return {
+            "status": "error",
+            "message": "Unable to retrieve orders"
+        }, 500
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if connection is not None and connection.is_connected():
+            connection.close()
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    start_price_generator(update_stock_prices)
+    start_order_processor(process_pending_orders)
+    app.run(debug=True, use_reloader=False)
+
 

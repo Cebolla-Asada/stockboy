@@ -213,6 +213,9 @@
 
     // Load all stocks when the page opens
     loadStocks();
+
+	// Refresh stock prices every 5 seconds
+	setInterval(loadStocks, 5000);
 </script>
 
 </body>

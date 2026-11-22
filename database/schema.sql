@@ -136,3 +136,21 @@ FROM users;
 SELECT * FROM holdings;
 
 SELECT * FROM transactions;
+
+-- ORDERS TABLE
+
+CREATE TABLE IF NOT EXISTS orders (
+    order_id INT NOT NULL AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    stock_id INT NOT NULL,
+    order_type ENUM('BUY', 'SELL') NOT NULL,
+    share_num INT NOT NULL,
+    status ENUM('PENDING', 'COMPLETED', 'CANCELLED')
+        NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    execute_at DATETIME NOT NULL,
+    PRIMARY KEY (order_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (stock_id) REFERENCES stocks(stock_id),
+    CHECK (share_num > 0)
+);
