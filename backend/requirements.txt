@@ -9,3 +9,4 @@ mysql-connector-python==9.4.0
 python-dotenv==1.2.1
 Werkzeug==3.1.9
 zipp==3.23.1
+holidays==0.83

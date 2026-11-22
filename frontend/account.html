@@ -171,8 +171,38 @@
         </section>
 
 
-        <!-- Transaction History -->
-        <section class="card top-gap">
+<!-- Orders Section -->
+<section class="card top-gap">
+
+    <h2>Pending Orders &amp; Order History</h2>
+
+    <p>Pending orders can be cancelled before execution.</p>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Stock</th>
+                    <th>Type</th>
+                    <th>Shares</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="orderRows">
+                <tr>
+                    <td colspan="6">Loading orders...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</section>
+
+<!-- Transaction History -->
+<section class="card top-gap">
 
             <h2>Transaction History</h2>
 
@@ -468,17 +498,98 @@
 
         }
 
+async function loadOrders() {
+    const orderRows = document.getElementById("orderRows");
+
+    try {
+        const response = await fetch("/api/orders");
+        const data = await response.json();
+
+        if (!response.ok || data.status !== "success") {
+            throw new Error("Unable to load orders");
+        }
+
+        orderRows.replaceChildren();
+
+        if (data.orders.length === 0) {
+            orderRows.innerHTML = '<tr><td colspan="6">No orders yet.</td></tr>';
+            return;
+        }
+
+        data.orders.forEach(order => {
+            const row = document.createElement("tr");
+
+            const values = [
+                order.order_id,
+                order.ticker,
+                order.order_type,
+                order.share_num,
+                order.status
+            ];
+
+            values.forEach(value => {
+                const cell = row.insertCell();
+                cell.textContent = value;
+            });
+
+            const actionCell = row.insertCell();
+
+            if (order.status === "PENDING") {
+                const button = document.createElement("button");
+                button.textContent = "Cancel";
+                button.onclick = () => cancelOrder(order.order_id);
+                actionCell.appendChild(button);
+            } else {
+                actionCell.textContent = "-";
+            }
+
+            orderRows.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error("Orders error:", error);
+        orderRows.innerHTML = '<tr><td colspan="6">Unable to load orders.</td></tr>';
+    }
+}
+
+async function cancelOrder(orderId) {
+    try {
+        const response = await fetch(
+            `/api/orders/${orderId}/cancel`,
+            { method: "POST" }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            alert(result.message || "Unable to cancel order.");
+        }
+
+        await loadOrders();
+
+    } catch (error) {
+        console.error("Cancellation error:", error);
+        alert("Unable to cancel order.");
+    }
+}
 
         (async () => {
             try {
-                await Promise.all([
-                    loadAccount(),
-                    loadTransactions()
-                ]);
+               await Promise.all([
+    loadAccount(),
+    loadTransactions(),
+    loadOrders()
+]);
             } catch (error) {
                 console.error("Error loading account or transactions:", error);
             }
         })();
+	
+	setInterval(async () => {
+    await loadOrders();
+    await loadAccount();
+    await loadTransactions();
+}, 2000);
 
     </script>
 

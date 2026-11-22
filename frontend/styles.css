@@ -477,3 +477,8 @@ tbody tr:hover {
         text-align: left;
     }
 }
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
